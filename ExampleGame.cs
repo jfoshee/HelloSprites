@@ -1,76 +1,83 @@
-using System.Numerics;
 using System.Runtime.InteropServices.JavaScript;
+using HelloSprites.Interop;
 
 namespace HelloSprites;
 
 public class ExampleGame : IGame
 {
-    private Vector2? _mousePosition;
-    private JSObject? _positionBuffer;
-
     /// <inheritdoc/>
-    public void Initialize(IShaderLoader shaderLoader)
+    public async Task Initialize(IShaderLoader shaderLoader)
     {
         // Load the shader program
         var shaderProgram = shaderLoader.LoadShaderProgram("vertex", "fragment");
 
-        // POSITIONS
-        // Create a buffer for the triangle's vertex positions.
-        _positionBuffer = GL.CreateBuffer();
-        GL.BindBuffer(GL.ARRAY_BUFFER, _positionBuffer);
-        // Define the vertex positions for the triangle.
-        Span<float> positions =
+        // Define quad vertices with positions and texture coordinates
+        Span<float> vertices =
         [
-            0.0f, 1.0f,
-            -1.0f, -1.0f,
-            1.0f, -1.0f
-        ];
-        GL.BufferData(GL.ARRAY_BUFFER, positions, GL.STATIC_DRAW);
-        // Tell WebGL how to pull out the positions from the position buffer into the vertexPosition attribute.
-        var positionAttributeLocation = GL.GetAttribLocation(shaderProgram, "aVertexPosition");
-        GL.VertexAttribPointer(positionAttributeLocation, 2, GL.FLOAT, false, 0, 0);
-        GL.EnableVertexAttribArray(positionAttributeLocation);
+            // First Triangle
+            -0.5f,  0.5f,  0.0f, 1.0f, // Top-left
+            0.5f,  0.5f,  1.0f, 1.0f, // Top-right
+            -0.5f, -0.5f,  0.0f, 0.0f, // Bottom-left
 
-        // COLORS
-        // Create a buffer for the triangle's colors.
-        var colorBuffer = GL.CreateBuffer();
-        GL.BindBuffer(GL.ARRAY_BUFFER, colorBuffer);
-        // Define the colors for each vertex of the triangle (Rainbow: Red, Green, Blue).
-        Span<float> colors =
-        [
-            1.0f, 0.0f, 0.0f, 1.0f, // Red
-            0.0f, 1.0f, 0.0f, 1.0f, // Green
-            0.0f, 0.0f, 1.0f, 1.0f  // Blue
+            // Second Triangle
+            0.5f,  0.5f,  1.0f, 1.0f, // Top-right
+            0.5f, -0.5f,  1.0f, 0.0f, // Bottom-right
+            -0.5f, -0.5f,  0.0f, 0.0f  // Bottom-left
         ];
-        GL.BufferData(GL.ARRAY_BUFFER, colors, GL.STATIC_DRAW);
-        // Tell WebGL how to pull out the colors from the color buffer into the vertexColor attribute.
-        var colorAttributeLocation = GL.GetAttribLocation(shaderProgram, "aVertexColor");
-        GL.VertexAttribPointer(colorAttributeLocation, 4, GL.FLOAT, false, 0, 0);
-        GL.EnableVertexAttribArray(colorAttributeLocation);
 
-        // Set the clear color to cornflower blue
-        GL.ClearColor(0.39f, 0.58f, 0.93f, 1.0f);
-        GL.Clear(GL.COLOR_BUFFER_BIT);
+        // Create and bind the position and texture buffer
+        var positionBuffer = GL.CreateBuffer();
+        GL.BindBuffer(GL.ARRAY_BUFFER, positionBuffer);
+        GL.BufferData(GL.ARRAY_BUFFER, vertices, GL.STATIC_DRAW);
+
+        // Get attribute locations
+        var posLoc = GL.GetAttribLocation(shaderProgram, "aPosition");
+        var texLoc = GL.GetAttribLocation(shaderProgram, "aTexCoord");
+
+        // Enable position attribute
+        GL.VertexAttribPointer(posLoc, 2, GL.FLOAT, false, 4 * sizeof(float), 0);
+        GL.EnableVertexAttribArray(posLoc);
+
+        // Enable texture coordinate attribute
+        GL.VertexAttribPointer(texLoc, 2, GL.FLOAT, false, 4 * sizeof(float), 2 * sizeof(float));
+        GL.EnableVertexAttribArray(texLoc);
+
+        // Load and bind texture
+        var textureId = await LoadTexture("/checker.png");
+        GL.ActiveTexture(GL.TEXTURE0);
+        GL.BindTexture(GL.TEXTURE_2D, textureId);
+        GL.Uniform1i(GL.GetUniformLocation(shaderProgram, "uTexture"), 0);
+
+        // Set clear color to cornflower blue
+        GL.ClearColor(0.392f, 0.584f, 0.929f, 1.0f);
     }
+
+    private async Task<JSObject> LoadTexture(string url)
+    {
+        // Load image using JS interop
+        var image = await Utility.LoadImageFromUrl(url);
+        var tex = GL.CreateTexture();
+        GL.BindTexture(GL.TEXTURE_2D, tex);
+        GL.TexParameteri(GL.TEXTURE_2D, GL.TEXTURE_MIN_FILTER, GL.LINEAR);
+        GL.TexParameteri(GL.TEXTURE_2D, GL.TEXTURE_MAG_FILTER, GL.NEAREST);
+        GL.TexParameteri(GL.TEXTURE_2D, GL.TEXTURE_WRAP_S, GL.CLAMP_TO_EDGE);
+        GL.TexParameteri(GL.TEXTURE_2D, GL.TEXTURE_WRAP_T, GL.CLAMP_TO_EDGE);
+        GL.TexImage2D(GL.TEXTURE_2D, 0, GL.RGBA, GL.RGBA, GL.UNSIGNED_BYTE, image);
+        return tex;
+    }
+
+    /// <inheritdoc/>
+    public void Render()
+    {
+        GL.Clear(GL.COLOR_BUFFER_BIT);
+        GL.DrawArrays(GL.TRIANGLES, 0, 6);
+    }
+
+    #region Unused Interface Methods
 
     /// <inheritdoc/>
     public void Update(TimeSpan deltaTime)
     {
-        if (_positionBuffer is null || _mousePosition is null)
-            return;
-        // Transform [0, 1] mouse position to 
-        // Normalized Device Coordinates (NDC) [-1, 1]
-        // To match WebGL's default coordinates
-        var x = _mousePosition.Value.X * 2 - 1;
-        var y = _mousePosition.Value.Y * 2 - 1;
-        Span<float> positions =
-        [
-            x, y,
-            -1.0f, -1.0f,
-            1.0f, -1.0f
-        ];
-        GL.BindBuffer(GL.ARRAY_BUFFER, _positionBuffer);
-        GL.BufferData(GL.ARRAY_BUFFER, positions, GL.STATIC_DRAW);
     }
 
     /// <inheritdoc/>
@@ -91,30 +98,21 @@ public class ExampleGame : IGame
     /// <inheritdoc/>
     public void OnMouseMove(float x, float y)
     {
-        _mousePosition = new Vector2(x, y);
     }
 
     /// <inheritdoc/>
     public void OnTouchStart(float x, float y)
     {
-        _mousePosition = new Vector2(x, y);
     }
 
     /// <inheritdoc/>
     public void OnTouchMove(float x, float y)
     {
-        _mousePosition = new Vector2(x, y);
     }
 
     /// <inheritdoc/>
     public void OnTouchEnd()
     {
     }
-
-    /// <inheritdoc/>
-    public void Render()
-    {
-        GL.Clear(GL.COLOR_BUFFER_BIT);
-        GL.DrawArrays(GL.TRIANGLES, 0, 3);
-    }
+    #endregion
 }

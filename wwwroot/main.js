@@ -17,6 +17,20 @@ const { setModuleImports, getAssemblyExports, getConfig } = await dotnet
   .withApplicationArgumentsFromQuery()
   .create();
 
+async function loadImageFromUrl(url) {
+  return new Promise((resolve, reject) => {
+    const image = new Image();
+    image.crossOrigin = "anonymous"; // Needed if you're loading from a different origin
+    image.onload = () => {
+      resolve(image);
+    };
+    image.onerror = (err) => {
+      reject(new Error(`Failed to load image at ${url}: ${err.message}`));
+    };
+    image.src = url;
+  });
+}
+
 setModuleImports("main.js", {
   gl: gl,
   utility: {
@@ -27,6 +41,7 @@ setModuleImports("main.js", {
       //       https://github.com/dotnet/runtime/blob/8cb3bf89e4b28b66bf3b4e2957fd015bf925a787/src/mono/wasm/runtime/marshal.ts#L386C5-L386C24
       gl.bufferData(target, memoryView._unsafe_create_view(), usage);
     },
+    loadImageFromUrl: loadImageFromUrl,
   },
   overlay: {
     setFPS: (fps) => {

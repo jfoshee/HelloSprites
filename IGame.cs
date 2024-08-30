@@ -5,7 +5,7 @@ public interface IGame : IRenderer
     /// <summary>
     /// Creates initial resources for the game scene.
     /// </summary>
-    void Initialize(IShaderLoader shaderLoader);
+    Task Initialize(IShaderLoader shaderLoader);
 
     /// <summary>
     /// Handles keyboard events such as key presses and releases.

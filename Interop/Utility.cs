@@ -13,4 +13,7 @@ static partial class Utility
     public static partial void GlBufferData(int target,
                                             [JSMarshalAs<MemoryView>] Span<byte> data,
                                             int usage);
+
+    [JSImport("utility.loadImageFromUrl", "main.js")]
+    internal static partial Task<JSObject> LoadImageFromUrl(string url);
 }
