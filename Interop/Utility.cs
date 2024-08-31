@@ -1,3 +1,5 @@
+using System.Numerics;
+using System.Runtime.InteropServices;
 using System.Runtime.InteropServices.JavaScript;
 using static System.Runtime.InteropServices.JavaScript.JSType;
 
@@ -21,6 +23,15 @@ static partial class Utility
     internal static partial JSObject ToFloat32Array(
         [JSMarshalAs<MemoryView>]
         Span<byte> data);
+
+    internal static JSObject ToFloat32Array(ref Matrix4x4 modelMatrix)
+    {
+        var matSpan = MemoryMarshal.CreateSpan(ref modelMatrix, 1);
+        var floatSpan = MemoryMarshal.Cast<Matrix4x4, float>(matSpan);
+        var byteSpan = MemoryMarshal.AsBytes(floatSpan);
+        return ToFloat32Array(byteSpan);
+    }
+
 
     [JSImport("utility.doMatrix", "main.js")]
     internal static partial void DoMatrix(

@@ -98,19 +98,13 @@ public class ExampleGame : IGame
 
         // First quad: move it to the left
         var modelMatrix = Matrix4x4.CreateTranslation(position);
-        Span<Matrix4x4> matSpan = MemoryMarshal.CreateSpan(ref modelMatrix, 1);
-        Span<float> floatSpan = MemoryMarshal.Cast<Matrix4x4, float>(matSpan);
-        var bytes = MemoryMarshal.AsBytes(floatSpan);
-        var floatArray = Utility.ToFloat32Array(bytes);
-        // Utility.DoMatrix(_modelMatrixLocation, floatArray);
-        GL.UniformMatrix4fv(_modelMatrixLocation, false, floatArray);
-        // GL.UniformMatrix4fv(_modelMatrixLocation, 1, false, modelMatrix);
+        GL.UniformMatrix4fv(_modelMatrixLocation, false, ref modelMatrix);
         GL.DrawArrays(GL.TRIANGLES, 0, 6);
 
         // Second quad: move it to the right
-        // modelMatrix = Matrix4x4.CreateTranslation(0.75f, 0.0f, 0.0f);
-        // GL.UniformMatrix4fv(_modelMatrixLocation, false, modelMatrix);
-        // GL.DrawArrays(GL.TRIANGLES, 0, 6);
+        modelMatrix = Matrix4x4.CreateTranslation(0.75f, 0.0f, 0.0f);
+        GL.UniformMatrix4fv(_modelMatrixLocation, false, ref modelMatrix);
+        GL.DrawArrays(GL.TRIANGLES, 0, 6);
     }
 
     /// <inheritdoc/>
