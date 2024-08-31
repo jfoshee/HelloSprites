@@ -32,7 +32,7 @@ public sealed class Particle(Vector3 position, Vector3 velocity, float scale)
     {
         Position = default;
         Velocity = default;
-        Scale = 0f;
+        Scale = 0;
         Lifetime = TimeSpan.Zero;
     }
 }

@@ -68,10 +68,14 @@ public class ExampleGame : IGame
         _modelMatrixLocation = GL.GetUniformLocation(shaderProgram, "uModelMatrix");
 
         // Load and bind texture
-        var textureId = await LoadTexture("/checker.png");
+        var textureId = await LoadTexture("/splat.png");
         GL.ActiveTexture(GL.TEXTURE0);
         GL.BindTexture(GL.TEXTURE_2D, textureId);
         GL.Uniform1i(GL.GetUniformLocation(shaderProgram, "uTexture"), 0);
+
+        // Enable alpha blending for the textures which have an alpha channel
+        GL.Enable(GL.BLEND);
+        GL.BlendFunc(GL.SRC_ALPHA, GL.ONE_MINUS_SRC_ALPHA);
 
         // Set clear color to cornflower blue
         GL.ClearColor(0.392f, 0.584f, 0.929f, 1.0f);
@@ -81,14 +85,15 @@ public class ExampleGame : IGame
     {
         // Load image using JS interop
         var image = await Utility.LoadImageFromUrl(url);
-        var tex = GL.CreateTexture();
-        GL.BindTexture(GL.TEXTURE_2D, tex);
-        GL.TexParameteri(GL.TEXTURE_2D, GL.TEXTURE_MIN_FILTER, GL.LINEAR);
-        GL.TexParameteri(GL.TEXTURE_2D, GL.TEXTURE_MAG_FILTER, GL.NEAREST);
+        var texture = GL.CreateTexture();
+        GL.BindTexture(GL.TEXTURE_2D, texture);
+        GL.TexParameteri(GL.TEXTURE_2D, GL.TEXTURE_MIN_FILTER, GL.LINEAR_MIPMAP_LINEAR);
+        GL.TexParameteri(GL.TEXTURE_2D, GL.TEXTURE_MAG_FILTER, GL.LINEAR);
         GL.TexParameteri(GL.TEXTURE_2D, GL.TEXTURE_WRAP_S, GL.CLAMP_TO_EDGE);
         GL.TexParameteri(GL.TEXTURE_2D, GL.TEXTURE_WRAP_T, GL.CLAMP_TO_EDGE);
         GL.TexImage2D(GL.TEXTURE_2D, 0, GL.RGBA, GL.RGBA, GL.UNSIGNED_BYTE, image);
-        return tex;
+        GL.GenerateMipmap(GL.TEXTURE_2D);
+        return texture;
     }
 
     /// <inheritdoc/>
