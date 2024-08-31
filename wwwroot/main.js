@@ -43,18 +43,15 @@ setModuleImports("main.js", {
     },
     loadImageFromUrl: loadImageFromUrl,
     bytesToFloat32Array: (memoryView) => {
-      // console.assert(memoryView instanceof MemoryView);
-      console.assert(memoryView._viewType == 0);  //MemoryViewType.Byte)
+      // console.assert(memoryView instanceof MemoryView && memoryView._viewType === MemoryViewType.Byte)
+      console.assert(
+        memoryView.constructor.name === "Span" && memoryView._viewType == 0,
+        "Argument to bytesToFloat32Array must be a Span<byte> marshaled as MemoryView"
+      );
       const uint8Array = memoryView.slice();
-      // Assert it is Uint8Array
       console.assert(uint8Array instanceof Uint8Array);
       return new Float32Array(uint8Array.buffer);
     },
-    doMatrix: (matLocation, matrix) => {
-      console.assert(matrix instanceof Float32Array);
-      // gl.uniformMatrix4fv(matLocation, false, new Float32Array([1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, -0.25, 0, 0, 1]));
-      gl.uniformMatrix4fv(matLocation, false, matrix);
-    }
   },
   overlay: {
     setFPS: (fps) => {

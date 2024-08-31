@@ -126,9 +126,7 @@ public class ExampleGame : IGame
         }
     }
 
-
     #region Unused Interface Methods
-
 
     /// <inheritdoc/>
     public void FixedUpdate(TimeSpan deltaTime)

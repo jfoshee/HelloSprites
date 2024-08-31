@@ -20,9 +20,7 @@ static partial class Utility
     internal static partial Task<JSObject> LoadImageFromUrl(string url);
 
     [JSImport("utility.bytesToFloat32Array", "main.js")]
-    internal static partial JSObject ToFloat32Array(
-        [JSMarshalAs<MemoryView>]
-        Span<byte> data);
+    internal static partial JSObject ToFloat32Array([JSMarshalAs<MemoryView>] Span<byte> data);
 
     internal static JSObject ToFloat32Array(ref Matrix4x4 modelMatrix)
     {
@@ -31,10 +29,4 @@ static partial class Utility
         var byteSpan = MemoryMarshal.AsBytes(floatSpan);
         return ToFloat32Array(byteSpan);
     }
-
-
-    [JSImport("utility.doMatrix", "main.js")]
-    internal static partial void DoMatrix(
-        JSObject matLocation,
-        JSObject matValue);
 }
