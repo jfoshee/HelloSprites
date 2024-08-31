@@ -5,20 +5,16 @@ namespace HelloSprites;
 
 public class ExampleGame : IGame
 {
+    private const int SpawnParticleCount = 100;
     private JSObject? _modelMatrixLocation;
-    private readonly List<Particle> _particles = new(500);
+    private readonly List<Particle> _particles = new(1_000);
+    private readonly Random random = new();
 
     public ExampleGame()
     {
         // initialize particles to random positions and velocities and scales
-        var random = new Random();
-        for (int i = 0; i < 500; i++)
-        {
-            var position = new Vector3((float)random.NextDouble() * 2 - 1, (float)random.NextDouble() * 2 - 1, 0);
-            var velocity = new Vector3((float)random.NextDouble() * 2 - 1, (float)random.NextDouble() * 2 - 1, 0);
-            var scale = (float)random.NextDouble() * 0.1f + 0.1f;
-            _particles.Add(new Particle(position, velocity, scale));
-        }
+        Vector3 center = Vector3.Zero;
+        SpawnParticles(center);
     }
 
     /// <inheritdoc/>
@@ -119,6 +115,8 @@ public class ExampleGame : IGame
     /// <inheritdoc/>
     public void Update(TimeSpan deltaTime)
     {
+        // Remove dead particles
+        _particles.RemoveAll(p => p.Dead);
     }
 
     /// <inheritdoc/>
@@ -130,6 +128,36 @@ public class ExampleGame : IGame
         }
     }
 
+
+    private void SpawnParticles(Vector3 center)
+    {
+        for (int i = 0; i < SpawnParticleCount; i++)
+        {
+            var position = center;
+            var velocity = new Vector3(
+                (float)random.NextDouble() * 2 - 1,
+                (float)random.NextDouble() * 2 - 1,
+                0);
+            var scale = (float)random.NextDouble() * 0.1f + 0.1f;
+            _particles.Add(new Particle(position, velocity, scale));
+        }
+    }
+
+    /// <inheritdoc/>
+    public void OnMouseClick(int button, bool pressed, float x, float y)
+    {
+        if (pressed)
+        {
+            // From normalized screen space to GL NDC
+            x = 2 * x - 1;
+            y = 2 * y - 1;
+            SpawnParticles(new Vector3(x, y, 0));
+        }
+    }
+
+    /// <inheritdoc/>
+    public void OnTouchStart(float x, float y) => OnMouseClick(0, true, x, y);
+
     #region Unused Interface Methods
     /// <inheritdoc/>
     public void OnKeyPress(string key, bool pressed)
@@ -137,17 +165,7 @@ public class ExampleGame : IGame
     }
 
     /// <inheritdoc/>
-    public void OnMouseClick(int button, bool pressed, float x, float y)
-    {
-    }
-
-    /// <inheritdoc/>
     public void OnMouseMove(float x, float y)
-    {
-    }
-
-    /// <inheritdoc/>
-    public void OnTouchStart(float x, float y)
     {
     }
 
