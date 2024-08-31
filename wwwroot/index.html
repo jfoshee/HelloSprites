@@ -47,6 +47,19 @@
         z-index: 100; /* Ensure it appears above other elements */
       }
 
+      #overlay2 {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        padding: 10px;
+        background-color: rgba(0, 0, 0, 0.5);
+        color: white;
+        font-family: Arial, sans-serif;
+        font-size: 10px;
+        border-radius: 5px;
+        z-index: 100; /* Ensure it appears above other elements */
+      }
+
       #fps {
         margin: 0;
       }
@@ -88,6 +101,11 @@
         <button id="clearErrors">&times;</button>
         <pre id="errorMessage"></pre>
       </div>
+    </div>
+    <div id="overlay2">
+      <p style="margin: 0">
+        <a href="https://github.com/jfoshee/HelloSprites"> 💾 </a>
+      </p>
     </div>
   </body>
 </html>
