@@ -1,3 +1,5 @@
+using System.Numerics;
+using System.Runtime.InteropServices;
 using System.Runtime.InteropServices.JavaScript;
 using HelloSprites.Interop;
 
@@ -5,6 +7,9 @@ namespace HelloSprites;
 
 public class ExampleGame : IGame
 {
+    private JSObject _shaderProgram;
+    private JSObject _modelMatrixLocation;
+
     /// <inheritdoc/>
     public async Task Initialize(IShaderLoader shaderLoader)
     {
@@ -16,13 +21,13 @@ public class ExampleGame : IGame
         [
             // First Triangle
             -0.5f,  0.5f,  0.0f, 1.0f, // Top-left
-            0.5f,  0.5f,  1.0f, 1.0f, // Top-right
-            -0.5f, -0.5f,  0.0f, 0.0f, // Bottom-left
+        0.5f,  0.5f,  1.0f, 1.0f, // Top-right
+        -0.5f, -0.5f,  0.0f, 0.0f, // Bottom-left
 
-            // Second Triangle
-            0.5f,  0.5f,  1.0f, 1.0f, // Top-right
-            0.5f, -0.5f,  1.0f, 0.0f, // Bottom-right
-            -0.5f, -0.5f,  0.0f, 0.0f  // Bottom-left
+        // Second Triangle
+        0.5f,  0.5f,  1.0f, 1.0f, // Top-right
+        0.5f, -0.5f,  1.0f, 0.0f, // Bottom-right
+        -0.5f, -0.5f,  0.0f, 0.0f  // Bottom-left
         ];
 
         // Create and bind the position and texture buffer
@@ -35,12 +40,25 @@ public class ExampleGame : IGame
         var texLoc = GL.GetAttribLocation(shaderProgram, "aTexCoord");
 
         // Enable position attribute
-        GL.VertexAttribPointer(posLoc, 2, GL.FLOAT, false, 4 * sizeof(float), 0);
+        GL.VertexAttribPointer(index: posLoc,
+                               size: 2,
+                               type: GL.FLOAT,
+                               normalized: false,
+                               stride: 4 * sizeof(float),
+                               offset: 0);
         GL.EnableVertexAttribArray(posLoc);
 
         // Enable texture coordinate attribute
-        GL.VertexAttribPointer(texLoc, 2, GL.FLOAT, false, 4 * sizeof(float), 2 * sizeof(float));
+        GL.VertexAttribPointer(index: texLoc,
+                               size: 2,
+                               type: GL.FLOAT,
+                               normalized: false,
+                               stride: 4 * sizeof(float),
+                               offset: 2 * sizeof(float));
         GL.EnableVertexAttribArray(texLoc);
+
+        // Get uniform location for the model matrix
+        var modelMatrixLocation = GL.GetUniformLocation(shaderProgram, "uModelMatrix");
 
         // Load and bind texture
         var textureId = await LoadTexture("/checker.png");
@@ -50,6 +68,10 @@ public class ExampleGame : IGame
 
         // Set clear color to cornflower blue
         GL.ClearColor(0.392f, 0.584f, 0.929f, 1.0f);
+
+        // Store the shader program and matrix location for later use
+        _shaderProgram = shaderProgram;
+        _modelMatrixLocation = modelMatrixLocation;
     }
 
     private async Task<JSObject> LoadTexture(string url)
@@ -70,8 +92,25 @@ public class ExampleGame : IGame
     public void Render()
     {
         GL.Clear(GL.COLOR_BUFFER_BIT);
+
+
+        // First quad: move it to the left
+        var modelMatrix = Matrix4x4.CreateTranslation(-0.5f, 0.2f, 0.0f);
+        Span<Matrix4x4> matSpan = MemoryMarshal.CreateSpan(ref modelMatrix, 1);
+        Span<float> floatSpan = MemoryMarshal.Cast<Matrix4x4, float>(matSpan);
+        var bytes = MemoryMarshal.AsBytes(floatSpan);
+        var floatArray = Utility.ToFloat32Array(bytes);
+        // Utility.DoMatrix(_modelMatrixLocation, floatArray);
+        GL.UniformMatrix4fv(_modelMatrixLocation, false, floatArray);
+        // GL.UniformMatrix4fv(_modelMatrixLocation, 1, false, modelMatrix);
         GL.DrawArrays(GL.TRIANGLES, 0, 6);
+
+        // Second quad: move it to the right
+        // modelMatrix = Matrix4x4.CreateTranslation(0.75f, 0.0f, 0.0f);
+        // GL.UniformMatrix4fv(_modelMatrixLocation, false, modelMatrix);
+        // GL.DrawArrays(GL.TRIANGLES, 0, 6);
     }
+
 
     #region Unused Interface Methods
 

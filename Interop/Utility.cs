@@ -16,4 +16,14 @@ static partial class Utility
 
     [JSImport("utility.loadImageFromUrl", "main.js")]
     internal static partial Task<JSObject> LoadImageFromUrl(string url);
+
+    [JSImport("utility.bytesToFloat32Array", "main.js")]
+    internal static partial JSObject ToFloat32Array(
+        [JSMarshalAs<MemoryView>]
+        Span<byte> data);
+
+    [JSImport("utility.doMatrix", "main.js")]
+    internal static partial void DoMatrix(
+        JSObject matLocation,
+        JSObject matValue);
 }

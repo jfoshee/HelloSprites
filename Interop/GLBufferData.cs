@@ -11,4 +11,12 @@ public static partial class GL
         // Marshal as bytes without copying
         Utility.GlBufferData(target, MemoryMarshal.AsBytes(data), usage);
     }
+
+    /// <summary>
+    /// Call gl.BufferData with the Memory of given values which will be marshalled as bytes
+    /// </summary>
+    public static void BufferData<T>(int target, Memory<T> data, int usage) where T : struct
+    {
+        BufferData(target, data.Span, usage);
+    }
 }
