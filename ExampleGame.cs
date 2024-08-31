@@ -88,14 +88,16 @@ public class ExampleGame : IGame
         return tex;
     }
 
+    private Vector3 position;
+    private Vector3 velocity = new(0.2f, 0.1f, 0.0f);
+
     /// <inheritdoc/>
     public void Render()
     {
         GL.Clear(GL.COLOR_BUFFER_BIT);
 
-
         // First quad: move it to the left
-        var modelMatrix = Matrix4x4.CreateTranslation(-0.5f, 0.2f, 0.0f);
+        var modelMatrix = Matrix4x4.CreateTranslation(position);
         Span<Matrix4x4> matSpan = MemoryMarshal.CreateSpan(ref modelMatrix, 1);
         Span<float> floatSpan = MemoryMarshal.Cast<Matrix4x4, float>(matSpan);
         var bytes = MemoryMarshal.AsBytes(floatSpan);
@@ -111,13 +113,28 @@ public class ExampleGame : IGame
         // GL.DrawArrays(GL.TRIANGLES, 0, 6);
     }
 
-
-    #region Unused Interface Methods
-
     /// <inheritdoc/>
     public void Update(TimeSpan deltaTime)
     {
+        // Update position from velocity
+        position += velocity * (float)deltaTime.TotalSeconds;
+        // Clamp position to screen bounds
+        position.X = Math.Clamp(position.X, -1.0f, 1.0f);
+        position.Y = Math.Clamp(position.Y, -1.0f, 1.0f);
+        // Mirror velocity when hitting screen bounds
+        if (position.X == -1.0f || position.X == 1.0f)
+        {
+            velocity.X *= -1.0f;
+        }
+        if (position.Y == -1.0f || position.Y == 1.0f)
+        {
+            velocity.Y *= -1.0f;
+        }
     }
+
+
+    #region Unused Interface Methods
+
 
     /// <inheritdoc/>
     public void FixedUpdate(TimeSpan deltaTime)
@@ -132,6 +149,9 @@ public class ExampleGame : IGame
     /// <inheritdoc/>
     public void OnMouseClick(int button, bool pressed, float x, float y)
     {
+        x = 2 * x - 1;
+        y = 2 * y - 1;
+        position = new Vector3(x, y, 0.0f);
     }
 
     /// <inheritdoc/>
