@@ -1,5 +1,3 @@
-using System.Numerics;
-using System.Runtime.InteropServices;
 using System.Runtime.InteropServices.JavaScript;
 using HelloSprites.Interop;
 
@@ -7,8 +5,21 @@ namespace HelloSprites;
 
 public class ExampleGame : IGame
 {
-    private JSObject _shaderProgram;
-    private JSObject _modelMatrixLocation;
+    private JSObject? _modelMatrixLocation;
+    private readonly List<Particle> _particles = new(500);
+
+    public ExampleGame()
+    {
+        // initialize particles to random positions and velocities and scales
+        var random = new Random();
+        for (int i = 0; i < 500; i++)
+        {
+            var position = new Vector3((float)random.NextDouble() * 2 - 1, (float)random.NextDouble() * 2 - 1, 0);
+            var velocity = new Vector3((float)random.NextDouble() * 2 - 1, (float)random.NextDouble() * 2 - 1, 0);
+            var scale = (float)random.NextDouble() * 0.1f + 0.1f;
+            _particles.Add(new Particle(position, velocity, scale));
+        }
+    }
 
     /// <inheritdoc/>
     public async Task Initialize(IShaderLoader shaderLoader)
@@ -21,13 +32,13 @@ public class ExampleGame : IGame
         [
             // First Triangle
             -0.5f,  0.5f,  0.0f, 1.0f, // Top-left
-        0.5f,  0.5f,  1.0f, 1.0f, // Top-right
-        -0.5f, -0.5f,  0.0f, 0.0f, // Bottom-left
+            0.5f,  0.5f,  1.0f, 1.0f, // Top-right
+            -0.5f, -0.5f,  0.0f, 0.0f, // Bottom-left
 
-        // Second Triangle
-        0.5f,  0.5f,  1.0f, 1.0f, // Top-right
-        0.5f, -0.5f,  1.0f, 0.0f, // Bottom-right
-        -0.5f, -0.5f,  0.0f, 0.0f  // Bottom-left
+            // Second Triangle
+            0.5f,  0.5f,  1.0f, 1.0f, // Top-right
+            0.5f, -0.5f,  1.0f, 0.0f, // Bottom-right
+            -0.5f, -0.5f,  0.0f, 0.0f  // Bottom-left
         ];
 
         // Create and bind the position and texture buffer
@@ -58,7 +69,7 @@ public class ExampleGame : IGame
         GL.EnableVertexAttribArray(texLoc);
 
         // Get uniform location for the model matrix
-        var modelMatrixLocation = GL.GetUniformLocation(shaderProgram, "uModelMatrix");
+        _modelMatrixLocation = GL.GetUniformLocation(shaderProgram, "uModelMatrix");
 
         // Load and bind texture
         var textureId = await LoadTexture("/checker.png");
@@ -68,13 +79,9 @@ public class ExampleGame : IGame
 
         // Set clear color to cornflower blue
         GL.ClearColor(0.392f, 0.584f, 0.929f, 1.0f);
-
-        // Store the shader program and matrix location for later use
-        _shaderProgram = shaderProgram;
-        _modelMatrixLocation = modelMatrixLocation;
     }
 
-    private async Task<JSObject> LoadTexture(string url)
+    private static async Task<JSObject> LoadTexture(string url)
     {
         // Load image using JS interop
         var image = await Utility.LoadImageFromUrl(url);
@@ -88,51 +95,42 @@ public class ExampleGame : IGame
         return tex;
     }
 
-    private Vector3 position;
-    private Vector3 velocity = new(0.2f, 0.1f, 0.0f);
-
     /// <inheritdoc/>
     public void Render()
     {
+        if (_modelMatrixLocation is null)
+            throw new InvalidOperationException("Model matrix location is not set");
+
         GL.Clear(GL.COLOR_BUFFER_BIT);
+        foreach (var particle in _particles)
+        {
+            // Create the model matrix for each particle
+            var modelMatrix = Matrix4x4.CreateScale(particle.Scale) *
+                              Matrix4x4.CreateTranslation(particle.Position);
 
-        // First quad: move it to the left
-        var modelMatrix = Matrix4x4.CreateTranslation(position);
-        GL.UniformMatrix4fv(_modelMatrixLocation, false, ref modelMatrix);
-        GL.DrawArrays(GL.TRIANGLES, 0, 6);
+            // Send the model matrix to the shader
+            GL.UniformMatrix4fv(_modelMatrixLocation, false, ref modelMatrix);
 
-        // Second quad: move it to the right
-        modelMatrix = Matrix4x4.CreateTranslation(0.75f, 0.0f, 0.0f);
-        GL.UniformMatrix4fv(_modelMatrixLocation, false, ref modelMatrix);
-        GL.DrawArrays(GL.TRIANGLES, 0, 6);
+            // Draw the quad (assuming it's already bound and configured)
+            GL.DrawArrays(GL.TRIANGLES, 0, 6);
+        }
     }
 
     /// <inheritdoc/>
     public void Update(TimeSpan deltaTime)
     {
-        // Update position from velocity
-        position += velocity * (float)deltaTime.TotalSeconds;
-        // Clamp position to screen bounds
-        position.X = Math.Clamp(position.X, -1.0f, 1.0f);
-        position.Y = Math.Clamp(position.Y, -1.0f, 1.0f);
-        // Mirror velocity when hitting screen bounds
-        if (position.X == -1.0f || position.X == 1.0f)
-        {
-            velocity.X *= -1.0f;
-        }
-        if (position.Y == -1.0f || position.Y == 1.0f)
-        {
-            velocity.Y *= -1.0f;
-        }
     }
-
-    #region Unused Interface Methods
 
     /// <inheritdoc/>
     public void FixedUpdate(TimeSpan deltaTime)
     {
+        foreach (var particle in _particles)
+        {
+            particle.Update(deltaTime);
+        }
     }
 
+    #region Unused Interface Methods
     /// <inheritdoc/>
     public void OnKeyPress(string key, bool pressed)
     {
@@ -141,9 +139,6 @@ public class ExampleGame : IGame
     /// <inheritdoc/>
     public void OnMouseClick(int button, bool pressed, float x, float y)
     {
-        x = 2 * x - 1;
-        y = 2 * y - 1;
-        position = new Vector3(x, y, 0.0f);
     }
 
     /// <inheritdoc/>
