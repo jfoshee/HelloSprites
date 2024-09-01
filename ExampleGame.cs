@@ -7,7 +7,9 @@ public class ExampleGame : IGame
 {
     private const int SpawnParticleCount = 100;
     private readonly List<Particle> _particles = new(1_000);
-    private readonly Random random = new();
+    private readonly Random _random = new();
+    private bool _spawnParticles = false;
+    private Vector2 _spawnPosition = Vector2.Zero;
     private JSObject? _shaderProgram;
     private JSObject? _instanceVBO;
     private JSObject? _positionBuffer;
@@ -160,6 +162,14 @@ public class ExampleGame : IGame
         {
             particle.Update(deltaTime);
         }
+
+        // Spawn new particles if the mouse is pressed
+        if (_spawnParticles)
+        {
+            var x = _spawnPosition.X * 2 - 1;
+            var y = _spawnPosition.Y * 2 - 1;
+            SpawnParticles(new Vector3(x, y, 0));
+        }
     }
 
     /// <inheritdoc/>
@@ -171,10 +181,10 @@ public class ExampleGame : IGame
         {
             var position = center;
             var velocity = new Vector3(
-                (float)random.NextDouble() * 2 - 1,
-                (float)random.NextDouble() * 2 - 1,
+                (float)_random.NextDouble() * 2 - 1,
+                (float)_random.NextDouble() * 2 - 1,
                 0);
-            var scale = (float)random.NextDouble() * 0.1f + 0.1f;
+            var scale = (float)_random.NextDouble() * 0.2f + 0.05f;
             _particles.Add(new Particle(position, velocity, scale));
         }
     }
@@ -182,27 +192,22 @@ public class ExampleGame : IGame
     /// <inheritdoc/>
     public void OnMouseClick(int button, bool pressed, float x, float y)
     {
-        if (pressed)
-        {
-            // From normalized screen space to GL NDC
-            x = 2 * x - 1;
-            y = 2 * y - 1;
-            SpawnParticles(new Vector3(x, y, 0));
-        }
+        _spawnParticles = pressed;
+        _spawnPosition = new Vector2(x, y);
     }
+
+    /// <inheritdoc/>
+    public void OnMouseMove(float x, float y) => _spawnPosition = new Vector2(x, y);
 
     /// <inheritdoc/>
     public void OnTouchStart(float x, float y) => OnMouseClick(0, true, x, y);
 
     /// <inheritdoc/>
-    public void OnMouseMove(float x, float y) => OnMouseClick(0, true, x, y);
-
-    /// <inheritdoc/>
     public void OnTouchMove(float x, float y) => OnMouseMove(x, y);
 
     /// <inheritdoc/>
-    public void OnKeyPress(string key, bool pressed) { }
+    public void OnTouchEnd() => _spawnParticles = false;
 
     /// <inheritdoc/>
-    public void OnTouchEnd() { }
+    public void OnKeyPress(string key, bool pressed) => _spawnParticles = pressed;
 }
