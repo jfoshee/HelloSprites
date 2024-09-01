@@ -65,9 +65,31 @@ public class ExampleGame : IGame
                                offset: 2 * sizeof(float));
         GL.EnableVertexAttribArray(texLoc);
 
-        // Create a buffer for instance data (position and scale)
+        // Create a buffer for instance data (translation and scale)
         _instanceVBO = GL.CreateBuffer();
         GL.BindBuffer(GL.ARRAY_BUFFER, _instanceVBO);
+
+        // Set up the instance attributes (translation and scale)
+        // Setting the divisor to 1 means this attribute is "per instance"
+        var instancePosLoc = GL.GetAttribLocation(_shaderProgram, "aInstanceTranslation");
+        GL.EnableVertexAttribArray(instancePosLoc);
+        GL.VertexAttribPointer(index: instancePosLoc,
+                               size: 3,
+                               type: GL.FLOAT,
+                               normalized: false,
+                               stride: 4 * sizeof(float),
+                               offset: 0);
+        GL.VertexAttribDivisor(instancePosLoc, 1);
+
+        var instanceScaleLoc = GL.GetAttribLocation(_shaderProgram, "aInstanceScale");
+        GL.EnableVertexAttribArray(instanceScaleLoc);
+        GL.VertexAttribPointer(index: instanceScaleLoc,
+                               size: 1,
+                               type: GL.FLOAT,
+                               normalized: false,
+                               stride: 4 * sizeof(float),
+                               offset: 3 * sizeof(float));
+        GL.VertexAttribDivisor(instanceScaleLoc, 1);
 
         // Enable alpha blending for the textures which have an alpha channel
         GL.Enable(GL.BLEND);
@@ -108,7 +130,6 @@ public class ExampleGame : IGame
 
         int particleCount = _particles.Count;
         Span<float> instanceData = stackalloc float[particleCount * 4]; // vec3 for position + float for scale
-
         for (int i = 0; i < particleCount; i++)
         {
             instanceData[i * 4 + 0] = _particles[i].Position.X;
@@ -116,21 +137,9 @@ public class ExampleGame : IGame
             instanceData[i * 4 + 2] = _particles[i].Position.Z;
             instanceData[i * 4 + 3] = _particles[i].Scale;
         }
-
         // Update the instance VBO with the latest data
         GL.BindBuffer(GL.ARRAY_BUFFER, _instanceVBO);
         GL.BufferData(GL.ARRAY_BUFFER, instanceData, GL.STREAM_DRAW);
-
-        // Set up the instance attributes (position and scale)
-        int instancePosLoc = GL.GetAttribLocation(_shaderProgram, "aInstancePosition");
-        GL.EnableVertexAttribArray(instancePosLoc);
-        GL.VertexAttribPointer(instancePosLoc, 3, GL.FLOAT, false, 4 * sizeof(float), 0);
-        GL.VertexAttribDivisor(instancePosLoc, 1);
-
-        int instanceScaleLoc = GL.GetAttribLocation(_shaderProgram, "aInstanceScale");
-        GL.EnableVertexAttribArray(instanceScaleLoc);
-        GL.VertexAttribPointer(instanceScaleLoc, 1, GL.FLOAT, false, 4 * sizeof(float), 3 * sizeof(float));
-        GL.VertexAttribDivisor(instanceScaleLoc, 1);
 
         // Bind the vertex buffer for the quad
         GL.BindBuffer(GL.ARRAY_BUFFER, _positionBuffer);
