@@ -2,6 +2,8 @@ namespace HelloSprites;
 
 public interface IGame : IRenderer
 {
+    string? OverlayText { get; }
+
     /// <summary>
     /// Creates initial resources for the game scene.
     /// </summary>

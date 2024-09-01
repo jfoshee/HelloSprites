@@ -14,6 +14,8 @@ public class ExampleGame : IGame
     private JSObject? _instanceVBO;
     private JSObject? _positionBuffer;
 
+    public string OverlayText => $"Particles: {_particles.Count:N0}";
+
     public ExampleGame()
     {
         // initialize particles to random positions and velocities and scales

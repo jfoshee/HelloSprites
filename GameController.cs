@@ -41,7 +41,12 @@ public sealed class GameController : IDisposable, IRenderer, IOverlayHandler
         _game.FixedUpdate(_interval);
 
         // Update Overlay GUI
-        Overlay.SetFPS($"{_fpsCounter.Fps:F2} Hz");
+        var fpsText = $"{_fpsCounter.Fps:F2} Hz";
+        if (_game.OverlayText is not null)
+        {
+            fpsText += $" | {_game.OverlayText}";
+        }
+        Overlay.SetFPS(fpsText);
         Overlay.SetErrorMessage(_lastRenderError);
     }
 
