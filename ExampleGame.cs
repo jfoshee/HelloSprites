@@ -153,17 +153,17 @@ public class ExampleGame : IGame
     {
         // Remove dead particles
         _particles.RemoveAll(p => p.Dead);
-    }
 
-    /// <inheritdoc/>
-    public void FixedUpdate(TimeSpan deltaTime)
-    {
+        // Update particles using wall-clock time so that if the game
+        // gets bogged down the particles will die in fewer frames
         foreach (var particle in _particles)
         {
             particle.Update(deltaTime);
         }
     }
 
+    /// <inheritdoc/>
+    public void FixedUpdate(TimeSpan deltaTime) { }
 
     private void SpawnParticles(Vector3 center)
     {
