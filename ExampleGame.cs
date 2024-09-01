@@ -194,25 +194,15 @@ public class ExampleGame : IGame
     /// <inheritdoc/>
     public void OnTouchStart(float x, float y) => OnMouseClick(0, true, x, y);
 
-    #region Unused Interface Methods
     /// <inheritdoc/>
-    public void OnKeyPress(string key, bool pressed)
-    {
-    }
+    public void OnMouseMove(float x, float y) => OnMouseClick(0, true, x, y);
 
     /// <inheritdoc/>
-    public void OnMouseMove(float x, float y)
-    {
-    }
+    public void OnTouchMove(float x, float y) => OnMouseMove(x, y);
 
     /// <inheritdoc/>
-    public void OnTouchMove(float x, float y)
-    {
-    }
+    public void OnKeyPress(string key, bool pressed) { }
 
     /// <inheritdoc/>
-    public void OnTouchEnd()
-    {
-    }
-    #endregion
+    public void OnTouchEnd() { }
 }
