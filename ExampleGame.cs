@@ -6,9 +6,11 @@ namespace HelloSprites;
 public class ExampleGame : IGame
 {
     private const int SpawnParticleCount = 100;
-    private JSObject? _modelMatrixLocation;
     private readonly List<Particle> _particles = new(1_000);
     private readonly Random random = new();
+    private JSObject? _shaderProgram;
+    private JSObject? _instanceVBO;
+    private JSObject? _positionBuffer;
 
     public ExampleGame()
     {
@@ -17,11 +19,10 @@ public class ExampleGame : IGame
         SpawnParticles(center);
     }
 
-    /// <inheritdoc/>
     public async Task Initialize(IShaderLoader shaderLoader)
     {
         // Load the shader program
-        var shaderProgram = shaderLoader.LoadShaderProgram("vertex", "fragment");
+        _shaderProgram = shaderLoader.LoadShaderProgram("vertex", "fragment");
 
         // Define quad vertices with positions and texture coordinates
         Span<float> vertices =
@@ -37,16 +38,16 @@ public class ExampleGame : IGame
             -0.5f, -0.5f,  0.0f, 0.0f  // Bottom-left
         ];
 
-        // Create and bind the position and texture buffer
-        var positionBuffer = GL.CreateBuffer();
-        GL.BindBuffer(GL.ARRAY_BUFFER, positionBuffer);
+        // Create and bind the position and texture buffer for the quad vertices
+        _positionBuffer = GL.CreateBuffer();
+        GL.BindBuffer(GL.ARRAY_BUFFER, _positionBuffer);
         GL.BufferData(GL.ARRAY_BUFFER, vertices, GL.STATIC_DRAW);
 
-        // Get attribute locations
-        var posLoc = GL.GetAttribLocation(shaderProgram, "aPosition");
-        var texLoc = GL.GetAttribLocation(shaderProgram, "aTexCoord");
+        // Get attribute locations for position and texture coordinates
+        var posLoc = GL.GetAttribLocation(_shaderProgram, "aPosition");
+        var texLoc = GL.GetAttribLocation(_shaderProgram, "aTexCoord");
 
-        // Enable position attribute
+        // Enable the position attribute
         GL.VertexAttribPointer(index: posLoc,
                                size: 2,
                                type: GL.FLOAT,
@@ -55,7 +56,7 @@ public class ExampleGame : IGame
                                offset: 0);
         GL.EnableVertexAttribArray(posLoc);
 
-        // Enable texture coordinate attribute
+        // Enable the texture coordinate attribute
         GL.VertexAttribPointer(index: texLoc,
                                size: 2,
                                type: GL.FLOAT,
@@ -64,18 +65,19 @@ public class ExampleGame : IGame
                                offset: 2 * sizeof(float));
         GL.EnableVertexAttribArray(texLoc);
 
-        // Get uniform location for the model matrix
-        _modelMatrixLocation = GL.GetUniformLocation(shaderProgram, "uModelMatrix");
+        // Create a buffer for instance data (position and scale)
+        _instanceVBO = GL.CreateBuffer();
+        GL.BindBuffer(GL.ARRAY_BUFFER, _instanceVBO);
+
+        // Enable alpha blending for the textures which have an alpha channel
+        GL.Enable(GL.BLEND);
+        GL.BlendFunc(GL.SRC_ALPHA, GL.ONE_MINUS_SRC_ALPHA);
 
         // Load and bind texture
         var textureId = await LoadTexture("/splat.png");
         GL.ActiveTexture(GL.TEXTURE0);
         GL.BindTexture(GL.TEXTURE_2D, textureId);
-        GL.Uniform1i(GL.GetUniformLocation(shaderProgram, "uTexture"), 0);
-
-        // Enable alpha blending for the textures which have an alpha channel
-        GL.Enable(GL.BLEND);
-        GL.BlendFunc(GL.SRC_ALPHA, GL.ONE_MINUS_SRC_ALPHA);
+        GL.Uniform1i(GL.GetUniformLocation(_shaderProgram, "uTexture"), 0);
 
         // Set clear color to cornflower blue
         GL.ClearColor(0.392f, 0.584f, 0.929f, 1.0f);
@@ -99,22 +101,42 @@ public class ExampleGame : IGame
     /// <inheritdoc/>
     public void Render()
     {
-        if (_modelMatrixLocation is null)
-            throw new InvalidOperationException("Model matrix location is not set");
-
         GL.Clear(GL.COLOR_BUFFER_BIT);
-        foreach (var particle in _particles)
+
+        if (_instanceVBO is null || _shaderProgram is null || _positionBuffer is null)
+            return;
+
+        int particleCount = _particles.Count;
+        Span<float> instanceData = stackalloc float[particleCount * 4]; // vec3 for position + float for scale
+
+        for (int i = 0; i < particleCount; i++)
         {
-            // Create the model matrix for each particle
-            var modelMatrix = Matrix4x4.CreateScale(particle.Scale) *
-                              Matrix4x4.CreateTranslation(particle.Position);
-
-            // Send the model matrix to the shader
-            GL.UniformMatrix4fv(_modelMatrixLocation, false, ref modelMatrix);
-
-            // Draw the quad (assuming it's already bound and configured)
-            GL.DrawArrays(GL.TRIANGLES, 0, 6);
+            instanceData[i * 4 + 0] = _particles[i].Position.X;
+            instanceData[i * 4 + 1] = _particles[i].Position.Y;
+            instanceData[i * 4 + 2] = _particles[i].Position.Z;
+            instanceData[i * 4 + 3] = _particles[i].Scale;
         }
+
+        // Update the instance VBO with the latest data
+        GL.BindBuffer(GL.ARRAY_BUFFER, _instanceVBO);
+        GL.BufferData(GL.ARRAY_BUFFER, instanceData, GL.STREAM_DRAW);
+
+        // Set up the instance attributes (position and scale)
+        int instancePosLoc = GL.GetAttribLocation(_shaderProgram, "aInstancePosition");
+        GL.EnableVertexAttribArray(instancePosLoc);
+        GL.VertexAttribPointer(instancePosLoc, 3, GL.FLOAT, false, 4 * sizeof(float), 0);
+        GL.VertexAttribDivisor(instancePosLoc, 1);
+
+        int instanceScaleLoc = GL.GetAttribLocation(_shaderProgram, "aInstanceScale");
+        GL.EnableVertexAttribArray(instanceScaleLoc);
+        GL.VertexAttribPointer(instanceScaleLoc, 1, GL.FLOAT, false, 4 * sizeof(float), 3 * sizeof(float));
+        GL.VertexAttribDivisor(instanceScaleLoc, 1);
+
+        // Bind the vertex buffer for the quad
+        GL.BindBuffer(GL.ARRAY_BUFFER, _positionBuffer);
+
+        // Draw all particles in a single call
+        GL.DrawArraysInstanced(GL.TRIANGLES, 0, 6, particleCount);
     }
 
     /// <inheritdoc/>

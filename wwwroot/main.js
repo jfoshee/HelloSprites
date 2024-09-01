@@ -33,6 +33,7 @@ async function loadImageFromUrl(url) {
 
 setModuleImports("main.js", {
   gl: gl,
+  ext: gl.getExtension("ANGLE_instanced_arrays"),
   utility: {
     // Permit passing a MemoryView for the data buffer which gives flexibility for marshalling
     glBufferData: (target, memoryView, usage) => {
