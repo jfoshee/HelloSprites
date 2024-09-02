@@ -38,28 +38,18 @@ public interface IGame : IRenderer
     /// Handles touch start event.
     /// Coordinates are normalized to the range [0, 1]
     /// </summary>
-    /// <param name="x">The normalized x-coordinate of the touch.</param>
-    /// <param name="y">The normalized y-coordinate of the touch.</param>
-    /// <remarks>
-    /// Limited to the first touch
-    /// </remarks>
-    void OnTouchStart(float x, float y);
+    void OnTouchStart(IEnumerable<Vector2> touches);
 
     /// <summary>
     /// Handles touch move event.
     /// Coordinates are normalized to the range [0, 1]
     /// </summary>
-    /// <param name="x">The normalized x-coordinate of the touch.</param>
-    /// <param name="y">The normalized y-coordinate of the touch.</param>
-    /// <remarks>
-    /// Limited to the first touch
-    /// </remarks>
-    void OnTouchMove(float x, float y);
+    void OnTouchMove(IEnumerable<Vector2> touches);
 
     /// <summary>
     /// Handles touch end event.
     /// </summary>
-    void OnTouchEnd();
+    void OnTouchEnd(IEnumerable<Vector2> touches);
 
     /// <summary>
     /// Updates the game scene based on the elapsed wall-clock time.

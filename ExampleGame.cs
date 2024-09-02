@@ -9,8 +9,8 @@ public class ExampleGame : IGame
     private const int SpawnParticleCount = 100;
     private readonly List<Particle> _particles = new(1_000);
     private readonly Random _random = new();
-    private bool _spawnParticles = false;
-    private Vector2 _spawnPosition = Vector2.Zero;
+    private bool _mouseDown;
+    private IEnumerable<Vector2> _spawnPositions = [];
     private JSObject? _shaderProgram;
     private JSObject? _instanceVBO;
     private JSObject? _positionBuffer;
@@ -19,9 +19,8 @@ public class ExampleGame : IGame
 
     public ExampleGame()
     {
-        // initialize particles to random positions and velocities and scales
-        Vector3 center = Vector3.Zero;
-        SpawnParticles(center);
+        // Spawn some particles at the center of the screen so the user sees something
+        SpawnParticles(Vector2.One / 2);
     }
 
     public async Task Initialize(IShaderLoader shaderLoader)
@@ -178,27 +177,22 @@ public class ExampleGame : IGame
             particle.Update(deltaTime);
         }
 
-        // Spawn new particles if the mouse is pressed
-        if (_spawnParticles)
+        // Spawn new particles based on input
+        foreach (var position in _spawnPositions)
         {
-            var x = _spawnPosition.X * 2 - 1;
-            var y = _spawnPosition.Y * 2 - 1;
-            SpawnParticles(new Vector3(x, y, 0));
+            SpawnParticles(position);
         }
     }
 
     /// <inheritdoc/>
     public void FixedUpdate(TimeSpan deltaTime) { }
 
-    private void SpawnParticles(Vector3 center)
+    private void SpawnParticles(Vector2 center)
     {
         for (int i = 0; i < SpawnParticleCount; i++)
         {
-            var position = center;
-            var velocity = new Vector3(
-                (float)_random.NextDouble() * 2 - 1,
-                (float)_random.NextDouble() * 2 - 1,
-                0);
+            var position = ToWorldSpace(center);
+            var velocity = ToWorldSpace(new Vector2((float)_random.NextDouble(), (float)_random.NextDouble()));
             var scale = (float)_random.NextDouble() * 0.2f + 0.05f;
             _particles.Add(new Particle(position, velocity, scale));
         }
@@ -207,22 +201,32 @@ public class ExampleGame : IGame
     /// <inheritdoc/>
     public void OnMouseClick(int button, bool pressed, float x, float y)
     {
-        _spawnParticles = pressed;
-        _spawnPosition = new Vector2(x, y);
+        _mouseDown = pressed;
+        _spawnPositions = _mouseDown ? ([new Vector2(x, y)]) : ([]);
     }
 
     /// <inheritdoc/>
-    public void OnMouseMove(float x, float y) => _spawnPosition = new Vector2(x, y);
+    public void OnMouseMove(float x, float y)
+    {
+        _spawnPositions = _mouseDown ? ([new Vector2(x, y)]) : ([]);
+    }
 
     /// <inheritdoc/>
-    public void OnTouchStart(float x, float y) => OnMouseClick(0, true, x, y);
+    public void OnTouchStart(IEnumerable<Vector2> touches) => _spawnPositions = touches;
 
     /// <inheritdoc/>
-    public void OnTouchMove(float x, float y) => OnMouseMove(x, y);
+    public void OnTouchMove(IEnumerable<Vector2> touches) => _spawnPositions = touches;
 
     /// <inheritdoc/>
-    public void OnTouchEnd() => _spawnParticles = false;
+    public void OnTouchEnd(IEnumerable<Vector2> touches) => _spawnPositions = touches;
 
     /// <inheritdoc/>
-    public void OnKeyPress(string key, bool pressed) => _spawnParticles = pressed;
+    public void OnKeyPress(string key, bool pressed) { }
+
+    private static Vector3 ToWorldSpace(Vector2 screenPosition)
+    {
+        var x = screenPosition.X * 2 - 1;
+        var y = screenPosition.Y * 2 - 1;
+        return new Vector3(x, y, 0);
+    }
 }

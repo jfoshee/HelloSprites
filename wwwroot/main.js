@@ -140,30 +140,34 @@ const mouseUp = (e) => {
   exports.InputInterop.OnMouseUp(shift, ctrl, alt, button, x, y);
 };
 
+function normalizeTouches(e) {
+  const touchesArray = Array.from(e.touches);
+  const points = touchesArray.map((t) => normalize(t.clientX, t.clientY));
+  return points;
+}
+
 const touchStart = (e) => {
   e.preventDefault();
   e.stopPropagation();
 
-  const touch = e.touches[0];
-  const { x, y } = normalize(touch.clientX, touch.clientY);
-  exports.InputInterop.OnTouchStart(x, y);
+  const touches = normalizeTouches(e);
+  exports.InputInterop.OnTouchStart(touches);
 };
 
 const touchMove = (e) => {
   e.preventDefault();
   e.stopPropagation();
 
-  const touch = e.touches[0];
-  const { x, y } = normalize(touch.clientX, touch.clientY);
-
-  exports.InputInterop.OnTouchMove(x, y);
+  const touches = normalizeTouches(e);
+  exports.InputInterop.OnTouchMove(touches);
 };
 
 const touchEnd = (e) => {
   e.preventDefault();
   e.stopPropagation();
 
-  exports.InputInterop.OnTouchEnd();
+  const touches = normalizeTouches(e);
+  exports.InputInterop.OnTouchEnd(touches);
 };
 
 canvas.addEventListener("keydown", keyDown, false);
