@@ -27,7 +27,7 @@ public class ExampleGame : IGame
     public async Task Initialize(IShaderLoader shaderLoader)
     {
         // Load the shader program
-        _shaderProgram = shaderLoader.LoadShaderProgram("vertex", "fragment");
+        _shaderProgram = shaderLoader.LoadShaderProgram("sprite-sheet-vertex", "fragment");
 
         // Define quad vertices with positions and texture coordinates
         Span<float> vertices =
@@ -74,37 +74,48 @@ public class ExampleGame : IGame
         _instanceVBO = GL.CreateBuffer();
         GL.BindBuffer(GL.ARRAY_BUFFER, _instanceVBO);
 
-        // Set up the instance attributes (translation and scale)
+        // Set up the instance attributes (for each member of InstanceData)
         // Setting the divisor to 1 means this attribute is "per instance"
         var instanceDataSize = Marshal.SizeOf<InstanceData>();
         var translationOffset = Marshal.OffsetOf<InstanceData>(nameof(InstanceData.Translation)).ToInt32();
-        var scaleOffset = Marshal.OffsetOf<InstanceData>(nameof(InstanceData.Scale)).ToInt32();
         var instancePosLoc = GL.GetAttribLocation(_shaderProgram, "aInstanceTranslation");
         GL.EnableVertexAttribArray(instancePosLoc);
+        GL.VertexAttribDivisor(instancePosLoc, 1);
         GL.VertexAttribPointer(index: instancePosLoc,
                                size: Marshal.SizeOf<Vector2>() / sizeof(float), // 2
                                type: GL.FLOAT,
                                normalized: false,
                                stride: instanceDataSize,
                                offset: translationOffset);
-        GL.VertexAttribDivisor(instancePosLoc, 1);
 
+        var scaleOffset = Marshal.OffsetOf<InstanceData>(nameof(InstanceData.Scale)).ToInt32();
         var instanceScaleLoc = GL.GetAttribLocation(_shaderProgram, "aInstanceScale");
         GL.EnableVertexAttribArray(instanceScaleLoc);
+        GL.VertexAttribDivisor(instanceScaleLoc, 1);
         GL.VertexAttribPointer(index: instanceScaleLoc,
                                size: 1,
                                type: GL.FLOAT,
                                normalized: false,
                                stride: instanceDataSize,
                                offset: scaleOffset);
-        GL.VertexAttribDivisor(instanceScaleLoc, 1);
+
+        var spriteIndexOffset = Marshal.OffsetOf<InstanceData>(nameof(InstanceData.SpriteIndex)).ToInt32();
+        var instanceSpriteIndexLoc = GL.GetAttribLocation(_shaderProgram, "aInstanceSpriteIndex");
+        GL.EnableVertexAttribArray(instanceSpriteIndexLoc);
+        GL.VertexAttribDivisor(instanceSpriteIndexLoc, 1);
+        GL.VertexAttribPointer(index: instanceSpriteIndexLoc,
+                               size: 1,
+                               type: GL.FLOAT,
+                               normalized: false,
+                               stride: instanceDataSize,
+                               offset: spriteIndexOffset);
 
         // Enable alpha blending for the textures which have an alpha channel
         GL.Enable(GL.BLEND);
         GL.BlendFunc(GL.SRC_ALPHA, GL.ONE_MINUS_SRC_ALPHA);
 
         // Load and bind texture
-        var textureId = await LoadTexture("/splat.png");
+        var textureId = await LoadTexture("/SpriteSheets/butterfly.png");
         GL.ActiveTexture(GL.TEXTURE0);
         GL.BindTexture(GL.TEXTURE_2D, textureId);
         GL.Uniform1i(GL.GetUniformLocation(_shaderProgram, "uTexture"), 0);
@@ -140,7 +151,8 @@ public class ExampleGame : IGame
         Span<InstanceData> instanceData = stackalloc InstanceData[particleCount];
         for (int i = 0; i < particleCount; i++)
         {
-            instanceData[i] = new InstanceData(_particles[i].Position.XY(), _particles[i].Scale);
+            var spriteIndex = _particles[i].SpriteIndex;
+            instanceData[i] = new InstanceData(_particles[i].Position.XY(), _particles[i].Scale, spriteIndex);
         }
         // Update the instance VBO with the latest data
         GL.BindBuffer(GL.ARRAY_BUFFER, _instanceVBO);
@@ -188,7 +200,8 @@ public class ExampleGame : IGame
                 (float)_random.NextDouble() * 2 - 1,
                 0);
             var scale = (float)_random.NextDouble() * 0.2f + 0.05f;
-            _particles.Add(new Particle(position, velocity, scale));
+            var spriteIndex = _random.Next(4 * 8 - 1);
+            _particles.Add(new Particle(position, velocity, scale, spriteIndex));
         }
     }
 

@@ -1,12 +1,13 @@
 namespace HelloSprites;
 
-public sealed class Particle(Vector3 position, Vector3 velocity, float scale)
+public sealed class Particle(Vector3 position, Vector3 velocity, float scale, int spriteIndex)
 {
     public Vector3 Position { get; set; } = position;
     public Vector3 Velocity { get; set; } = velocity;
     public float Scale { get; set; } = scale;
     public TimeSpan Lifetime { get; private set; } = TimeSpan.FromSeconds(5);
     public bool Dead { get; private set; } = false;
+    public int SpriteIndex { get; private set; } = spriteIndex;
 
     public void Update(TimeSpan deltaTime)
     {
