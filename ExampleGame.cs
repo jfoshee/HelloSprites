@@ -130,7 +130,7 @@ public class ExampleGame : IGame
         var texture = GL.CreateTexture();
         GL.BindTexture(GL.TEXTURE_2D, texture);
         GL.TexParameteri(GL.TEXTURE_2D, GL.TEXTURE_MIN_FILTER, GL.LINEAR_MIPMAP_LINEAR);
-        GL.TexParameteri(GL.TEXTURE_2D, GL.TEXTURE_MAG_FILTER, GL.LINEAR);
+        GL.TexParameteri(GL.TEXTURE_2D, GL.TEXTURE_MAG_FILTER, GL.NEAREST); // pixel art
         GL.TexParameteri(GL.TEXTURE_2D, GL.TEXTURE_WRAP_S, GL.CLAMP_TO_EDGE);
         GL.TexParameteri(GL.TEXTURE_2D, GL.TEXTURE_WRAP_T, GL.CLAMP_TO_EDGE);
         GL.TexImage2D(GL.TEXTURE_2D, 0, GL.RGBA, GL.RGBA, GL.UNSIGNED_BYTE, image);
@@ -193,7 +193,7 @@ public class ExampleGame : IGame
         {
             var position = ToWorldSpace(center);
             var velocity = ToWorldSpace(new Vector2((float)_random.NextDouble(), (float)_random.NextDouble()));
-            var scale = (float)_random.NextDouble() * 0.2f + 0.05f;
+            var scale = (float)_random.NextDouble() * 0.05f + 0.01f;
             _particles.Add(new Particle(position, velocity, scale));
         }
     }
