@@ -1,3 +1,4 @@
+using System.Runtime.InteropServices;
 using System.Runtime.InteropServices.JavaScript;
 using HelloSprites.Interop;
 
@@ -75,14 +76,17 @@ public class ExampleGame : IGame
 
         // Set up the instance attributes (translation and scale)
         // Setting the divisor to 1 means this attribute is "per instance"
+        var instanceDataSize = Marshal.SizeOf<InstanceData>();
+        var translationOffset = Marshal.OffsetOf<InstanceData>(nameof(InstanceData.Translation)).ToInt32();
+        var scaleOffset = Marshal.OffsetOf<InstanceData>(nameof(InstanceData.Scale)).ToInt32();
         var instancePosLoc = GL.GetAttribLocation(_shaderProgram, "aInstanceTranslation");
         GL.EnableVertexAttribArray(instancePosLoc);
         GL.VertexAttribPointer(index: instancePosLoc,
-                               size: 3,
+                               size: Marshal.SizeOf<Vector2>() / sizeof(float), // 2
                                type: GL.FLOAT,
                                normalized: false,
-                               stride: 4 * sizeof(float),
-                               offset: 0);
+                               stride: instanceDataSize,
+                               offset: translationOffset);
         GL.VertexAttribDivisor(instancePosLoc, 1);
 
         var instanceScaleLoc = GL.GetAttribLocation(_shaderProgram, "aInstanceScale");
@@ -91,8 +95,8 @@ public class ExampleGame : IGame
                                size: 1,
                                type: GL.FLOAT,
                                normalized: false,
-                               stride: 4 * sizeof(float),
-                               offset: 3 * sizeof(float));
+                               stride: instanceDataSize,
+                               offset: scaleOffset);
         GL.VertexAttribDivisor(instanceScaleLoc, 1);
 
         // Enable alpha blending for the textures which have an alpha channel
@@ -133,13 +137,10 @@ public class ExampleGame : IGame
             return;
 
         int particleCount = _particles.Count;
-        Span<float> instanceData = stackalloc float[particleCount * 4]; // vec3 for position + float for scale
+        Span<InstanceData> instanceData = stackalloc InstanceData[particleCount];
         for (int i = 0; i < particleCount; i++)
         {
-            instanceData[i * 4 + 0] = _particles[i].Position.X;
-            instanceData[i * 4 + 1] = _particles[i].Position.Y;
-            instanceData[i * 4 + 2] = _particles[i].Position.Z;
-            instanceData[i * 4 + 3] = _particles[i].Scale;
+            instanceData[i] = new InstanceData(_particles[i].Position.XY(), _particles[i].Scale);
         }
         // Update the instance VBO with the latest data
         GL.BindBuffer(GL.ARRAY_BUFFER, _instanceVBO);
