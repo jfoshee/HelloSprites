@@ -200,8 +200,7 @@ public class ExampleGame : IGame
                 (float)_random.NextDouble() * 2 - 1,
                 0);
             var scale = (float)_random.NextDouble() * 0.2f + 0.05f;
-            var spriteIndex = _random.Next(4 * 8 - 1);
-            _particles.Add(new Particle(position, velocity, scale, spriteIndex));
+            _particles.Add(new Particle(position, velocity, scale));
         }
     }
 
