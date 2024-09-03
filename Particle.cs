@@ -1,18 +1,33 @@
 namespace HelloSprites;
 
-public sealed class Particle(Vector3 position, Vector3 velocity, float scale)
+public sealed class Particle
 {
-    private const int LifeSpanSeconds = 5;
+    // private const double LifeSpanSeconds = 5;
+    private const double LifeSpanSeconds = 2 - 1/20.0;
 
-    public Vector3 Position { get; set; } = position;
-    public Vector3 Velocity { get; set; } = velocity;
-    public float Scale { get; set; } = scale;
+    public Vector3 Position { get; set; }
+    public Vector3 Velocity { get; set; }
+    public float Scale { get; set; }
     public TimeSpan Lifetime { get; private set; } = TimeSpan.FromSeconds(LifeSpanSeconds);
     public bool Dead { get; private set; } = false;
     public int SpriteIndex { get; private set; }
+    private int _spriteRow;
 
-    private static readonly int[] SpriteIndices = [0, 1, 2, 1];
-    private static readonly TimeSpan FrameDuration = TimeSpan.FromSeconds(1.0 / 6.0); // 6 fps
+    const int RowCount = 11;
+    const int ColumnCount = 20;
+
+    private static readonly int[] SpriteIndices = Enumerable.Range(0, ColumnCount - 1).ToArray();
+    private static readonly TimeSpan FrameDuration = TimeSpan.FromSeconds(1.0 / 10.0);
+    // private static readonly TimeSpan FrameDuration = TimeSpan.FromSeconds(1);
+
+    public Particle(Vector3 position, Vector3 velocity, float scale)
+    {
+        Position = position;
+        Velocity = velocity;
+        Scale = scale;
+        // Pick random row when constructed
+        _spriteRow = new Random().Next(0, RowCount - 1);
+    }
 
     public void Update(TimeSpan deltaTime)
     {
@@ -25,16 +40,10 @@ public sealed class Particle(Vector3 position, Vector3 velocity, float scale)
         // Decrease the lifetime by the elapsed time
         Lifetime -= deltaTime;
 
-        // Choose the Row of the sprite-sheet based on the velocity
-        // 0 = Down, 1 = Right, 2 = Up, 3 = Left (flipped vertically from image)
-        int row = Math.Abs(Velocity.X) > Math.Abs(Velocity.Y)
-              ? (Velocity.X > 0 ? 1 : 3)
-              : (Velocity.Y > 0 ? 2 : 0);
-        var rowOffset = row * 4;
-
         // Update the particle's sprite index based on time
         var elapsedSeconds = LifeSpanSeconds - Lifetime.TotalSeconds;
         int totalFramesElapsed = (int)(elapsedSeconds / FrameDuration.TotalSeconds);
+        var rowOffset = _spriteRow * ColumnCount;
         SpriteIndex = SpriteIndices[totalFramesElapsed % SpriteIndices.Length] + rowOffset;
 
         // Check if the particle's lifetime has expired

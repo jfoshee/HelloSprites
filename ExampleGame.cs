@@ -6,7 +6,9 @@ namespace HelloSprites;
 
 public class ExampleGame : IGame
 {
-    private const int SpawnParticleCount = 100;
+    private const int SpawnParticleCount = 50;
+    private const float ScaleMin = 0.01f;
+    private const float ScaleMax = 0.1f;
     private readonly List<Particle> _particles = new(1_000);
     private readonly Random _random = new();
     private bool _mouseDown;
@@ -114,13 +116,12 @@ public class ExampleGame : IGame
         GL.BlendFunc(GL.SRC_ALPHA, GL.ONE_MINUS_SRC_ALPHA);
 
         // Load and bind texture
-        var textureId = await LoadTexture("/SpriteSheets/butterfly.png");
+        var textureId = await LoadTexture("/SpriteSheets/magic-fx.png");
         GL.ActiveTexture(GL.TEXTURE0);
         GL.BindTexture(GL.TEXTURE_2D, textureId);
         GL.Uniform1i(GL.GetUniformLocation(_shaderProgram, "uTexture"), 0);
 
-        // Set clear color to cornflower blue
-        GL.ClearColor(0.392f, 0.584f, 0.929f, 1.0f);
+        GL.ClearColor(0.1f, 0.1f, 0.1f, 1.0f);
     }
 
     private static async Task<JSObject> LoadTexture(string url)
@@ -193,7 +194,7 @@ public class ExampleGame : IGame
         {
             var position = ToWorldSpace(center);
             var velocity = ToWorldSpace(new Vector2((float)_random.NextDouble(), (float)_random.NextDouble()));
-            var scale = (float)_random.NextDouble() * 0.05f + 0.01f;
+            var scale = (float)_random.NextDouble() * (ScaleMax - ScaleMin) + ScaleMin;
             _particles.Add(new Particle(position, velocity, scale));
         }
     }
