@@ -6,7 +6,7 @@ namespace HelloSprites;
 
 public class ExampleGame : IGame
 {
-    private const int SpawnParticleCount = 50;
+    private const int SpawnParticleCount = 25;
     private const float ScaleMin = 0.01f;
     private const float ScaleMax = 0.1f;
     private const float VelocityMin = -0.5f;
@@ -208,7 +208,8 @@ public class ExampleGame : IGame
         for (int i = 0; i < particleCount; i++)
         {
             var spriteIndex = _particles[i].FrameIndex;
-            var transform = Matrix3x2.CreateScale(_particles[i].Scale) *
+            var transform = Matrix3x2.CreateRotation(_particles[i].Rotation) *
+                            Matrix3x2.CreateScale(_particles[i].Scale) *
                             Matrix3x2.CreateTranslation(_particles[i].Position.XY());
             instanceData[i] = new InstanceData(transform, spriteIndex);
         }
@@ -254,15 +255,17 @@ public class ExampleGame : IGame
             var v_x = (float)_random.NextDouble() * (VelocityMax - VelocityMin) + VelocityMin;
             var v_y = (float)_random.NextDouble() * (VelocityMax - VelocityMin) + VelocityMin;
             var velocity = new Vector3(v_x, v_y, 0);
+            // Random transform
             var scale_x = (float)_random.NextDouble() * (ScaleMax - ScaleMin) + ScaleMin;
             var scale_y = (float)_random.NextDouble() * (ScaleMax - ScaleMin) + ScaleMin;
             var scale = new Vector2(scale_x, scale_y);
+            var rotation = (float)_random.NextDouble() * MathF.PI * 2;
             // Pick a random sprite based on the frame sets
             var frameSet = _random.Next(_frameSetIndices.Count);
             int[] frameIndices = _frameSetIndices[frameSet];
             var initialFrame = _random.Next(frameIndices.Length);
             var fps = _random.Next(_fpsMin, _fpsMax + 1);
-            var particle = new Particle(position, velocity, scale, frameIndices, initialFrame, fps);
+            var particle = new Particle(position, velocity, scale, rotation, frameIndices, initialFrame, fps);
             _particles.Add(particle);
         }
     }

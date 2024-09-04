@@ -3,6 +3,7 @@ namespace HelloSprites;
 public sealed class Particle(Vector3 position,
                              Vector3 velocity,
                              Vector2 scale,
+                             float rotation,
                              int[] frameIndices,
                              int initialFrame,
                              double fps)
@@ -14,6 +15,7 @@ public sealed class Particle(Vector3 position,
     public Vector3 Position { get; set; } = position;
     public Vector3 Velocity { get; set; } = velocity;
     public Vector2 Scale { get; set; } = scale;
+    public float Rotation { get; set; } = rotation;
     public TimeSpan Lifetime { get; private set; } = TimeSpan.FromSeconds(LifeSpanSeconds);
     public bool Dead { get; private set; } = false;
     public int FrameIndex { get; private set; } = initialFrame;
