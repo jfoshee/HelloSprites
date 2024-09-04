@@ -25,7 +25,7 @@ public class ExampleGame : IGame
         SpawnParticles(Vector2.One / 2);
     }
 
-    public async Task Initialize(IShaderLoader shaderLoader)
+    public void Initialize(IShaderLoader shaderLoader)
     {
         // Load the shader program
         _shaderProgram = shaderLoader.LoadShaderProgram("sprite-sheet-vertex", "fragment");
@@ -115,13 +115,17 @@ public class ExampleGame : IGame
         GL.Enable(GL.BLEND);
         GL.BlendFunc(GL.SRC_ALPHA, GL.ONE_MINUS_SRC_ALPHA);
 
+        GL.ClearColor(0.1f, 0.1f, 0.1f, 1.0f);
+    }
+
+    public async Task LoadAssetsAsync()
+    {
         // Load and bind texture
         var textureId = await LoadTexture("/SpriteSheets/magic-fx.png");
         GL.ActiveTexture(GL.TEXTURE0);
         GL.BindTexture(GL.TEXTURE_2D, textureId);
-        GL.Uniform1i(GL.GetUniformLocation(_shaderProgram, "uTexture"), 0);
-
-        GL.ClearColor(0.1f, 0.1f, 0.1f, 1.0f);
+        var textureUniformLoc = GL.GetUniformLocation(_shaderProgram!, "uTexture");
+        GL.Uniform1i(textureUniformLoc, 0);
     }
 
     private static async Task<JSObject> LoadTexture(string url)

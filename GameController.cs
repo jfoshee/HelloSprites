@@ -21,7 +21,8 @@ public sealed class GameController : IDisposable, IRenderer, IOverlayHandler
 
     public async Task Start()
     {
-        await _game.Initialize(new ShaderLoader());
+        _game.Initialize(new ShaderLoader());
+        await _game.LoadAssetsAsync();
         Singletons.GameInstance = _game;
         Singletons.RendererInstance = this;
         Singletons.OverlayHandlerInstance = this;
