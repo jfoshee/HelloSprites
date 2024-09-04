@@ -19,6 +19,8 @@ public class ExampleGame : IGame
     private JSObject? _instanceVBO;
     private JSObject? _positionBuffer;
     private List<int[]> _frameSetIndices = [[0]];
+    private int _fpsMin = 24;
+    private int _fpsMax = 24;
 
     public string OverlayText => $"Particles: {_particles.Count:N0}";
 
@@ -134,6 +136,8 @@ public class ExampleGame : IGame
             Enumerable.Range(0, 59).ToArray(),  // black arrow
             Enumerable.Range(59, 58).ToArray()  // blue arrow
         ];
+        _fpsMin = 24;
+        _fpsMax = 120;
 
         if (_shaderProgram is null)
             throw new InvalidOperationException("Shader program not initialized");
@@ -232,7 +236,11 @@ public class ExampleGame : IGame
             var scale = (float)_random.NextDouble() * (ScaleMax - ScaleMin) + ScaleMin;
             // Pick a random sprite based on the frame sets
             var frameSet = _random.Next(_frameSetIndices.Count);
-            _particles.Add(new Particle(position, velocity, scale, _frameSetIndices[frameSet]));
+            int[] frameIndices = _frameSetIndices[frameSet];
+            var initialFrame = _random.Next(frameIndices.Length);
+            var fps = _random.Next(_fpsMin, _fpsMax + 1);
+            var particle = new Particle(position, velocity, scale, frameIndices, initialFrame, fps);
+            _particles.Add(particle);
         }
     }
 

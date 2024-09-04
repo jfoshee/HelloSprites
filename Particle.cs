@@ -1,8 +1,13 @@
 namespace HelloSprites;
 
-public sealed class Particle(Vector3 position, Vector3 velocity, float scale, int[] frameIndices)
+public sealed class Particle(Vector3 position,
+                             Vector3 velocity,
+                             float scale,
+                             int[] frameIndices,
+                             int initialFrame,
+                             double fps)
 {
-    private static readonly TimeSpan FrameDuration = TimeSpan.FromSeconds(1.0 / 60.0);
+    private readonly TimeSpan FrameDuration = TimeSpan.FromSeconds(1.0 / fps);
     private const double LifeSpanSeconds = 5;
     // private const double LifeSpanSeconds = 2 - 1/20.0;
 
@@ -11,7 +16,7 @@ public sealed class Particle(Vector3 position, Vector3 velocity, float scale, in
     public float Scale { get; set; } = scale;
     public TimeSpan Lifetime { get; private set; } = TimeSpan.FromSeconds(LifeSpanSeconds);
     public bool Dead { get; private set; } = false;
-    public int FrameIndex { get; private set; } = frameIndices[0];
+    public int FrameIndex { get; private set; } = initialFrame;
     private readonly int[] _frameIndices = frameIndices;
 
     public void Update(TimeSpan deltaTime)
