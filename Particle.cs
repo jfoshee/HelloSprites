@@ -2,8 +2,8 @@ namespace HelloSprites;
 
 public sealed class Particle
 {
-    // private const double LifeSpanSeconds = 5;
-    private const double LifeSpanSeconds = 2 - 1/20.0;
+    private const double LifeSpanSeconds = 5;
+    // private const double LifeSpanSeconds = 2 - 1/20.0;
 
     public Vector3 Position { get; set; }
     public Vector3 Velocity { get; set; }
@@ -17,8 +17,7 @@ public sealed class Particle
     const int ColumnCount = 20;
 
     private static readonly int[] SpriteIndices = Enumerable.Range(0, ColumnCount - 1).ToArray();
-    private static readonly TimeSpan FrameDuration = TimeSpan.FromSeconds(1.0 / 10.0);
-    // private static readonly TimeSpan FrameDuration = TimeSpan.FromSeconds(1);
+    private static readonly TimeSpan FrameDuration = TimeSpan.FromSeconds(1.0 / 24.0);
 
     public Particle(Vector3 position, Vector3 velocity, float scale)
     {

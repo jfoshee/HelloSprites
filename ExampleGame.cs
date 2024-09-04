@@ -120,10 +120,24 @@ public class ExampleGame : IGame
 
     public async Task LoadAssetsAsync()
     {
+        // string texturePath = "/SpriteSheets/magic-fx.png";
+        // // Sprite Sheet parameters
+        // int columnCount = 20;
+        // int rowCount = 11;
+        // float paddingRight = 0f;
+        // float paddingBottom = 0f;
+
+        string texturePath = "/SpriteSheets/arrows.png";
+        // Sprite Sheet parameters (see SpriteSheets/arrows.json)
+        int columnCount = 8;
+        int rowCount = 15;
+        float paddingRight = (512 - 480) / 512f;
+        float paddingBottom = (1024 - 900) / 1024f;
+
         if (_shaderProgram is null)
             throw new InvalidOperationException("Shader program not initialized");
         // Load and bind texture
-        var textureId = await LoadTexture("/SpriteSheets/magic-fx.png");
+        var textureId = await LoadTexture(texturePath);
         GL.ActiveTexture(GL.TEXTURE0);
         GL.BindTexture(GL.TEXTURE_2D, textureId);
         var textureUniformLoc = GL.GetUniformLocation(_shaderProgram, "uTexture");
@@ -131,8 +145,12 @@ public class ExampleGame : IGame
         // Setup Sprite Sheet parameters as shader Uniforms
         var uSpriteSheetColumnCountLocation = GL.GetUniformLocation(_shaderProgram, "uSpriteSheetColumnCount");
         var uSpriteSheetRowCountLocation = GL.GetUniformLocation(_shaderProgram, "uSpriteSheetRowCount");
-        GL.Uniform1f(uSpriteSheetColumnCountLocation, 20.0f);
-        GL.Uniform1f(uSpriteSheetRowCountLocation, 11.0f);
+        var uPaddingRightLoc = GL.GetUniformLocation(_shaderProgram, "uPaddingRight");
+        var uPaddingBottomLoc = GL.GetUniformLocation(_shaderProgram, "uPaddingBottom");
+        GL.Uniform1f(uSpriteSheetColumnCountLocation, columnCount);
+        GL.Uniform1f(uSpriteSheetRowCountLocation, rowCount);
+        GL.Uniform1f(uPaddingRightLoc, paddingRight);
+        GL.Uniform1f(uPaddingBottomLoc, paddingBottom);
     }
 
     private static async Task<JSObject> LoadTexture(string url)
