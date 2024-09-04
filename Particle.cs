@@ -1,6 +1,6 @@
 namespace HelloSprites;
 
-public sealed class Particle(Vector3 position, Vector3 velocity, float scale, int[] spriteIndices)
+public sealed class Particle(Vector3 position, Vector3 velocity, float scale, int[] frameIndices)
 {
     private static readonly TimeSpan FrameDuration = TimeSpan.FromSeconds(1.0 / 60.0);
     private const double LifeSpanSeconds = 5;
@@ -11,8 +11,8 @@ public sealed class Particle(Vector3 position, Vector3 velocity, float scale, in
     public float Scale { get; set; } = scale;
     public TimeSpan Lifetime { get; private set; } = TimeSpan.FromSeconds(LifeSpanSeconds);
     public bool Dead { get; private set; } = false;
-    public int SpriteIndex { get; private set; } = spriteIndices[0];
-    private readonly int[] _spriteIndices = spriteIndices;
+    public int FrameIndex { get; private set; } = frameIndices[0];
+    private readonly int[] _frameIndices = frameIndices;
 
     public void Update(TimeSpan deltaTime)
     {
@@ -28,7 +28,7 @@ public sealed class Particle(Vector3 position, Vector3 velocity, float scale, in
         // Update the particle's sprite index based on time
         var elapsedSeconds = LifeSpanSeconds - Lifetime.TotalSeconds;
         int totalFramesElapsed = (int)(elapsedSeconds / FrameDuration.TotalSeconds);
-        SpriteIndex = _spriteIndices[totalFramesElapsed % _spriteIndices.Length];
+        FrameIndex = _frameIndices[totalFramesElapsed % _frameIndices.Length];
 
         // Check if the particle's lifetime has expired
         if (Lifetime <= TimeSpan.Zero)

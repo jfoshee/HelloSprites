@@ -18,7 +18,7 @@ public class ExampleGame : IGame
     private JSObject? _shaderProgram;
     private JSObject? _instanceVBO;
     private JSObject? _positionBuffer;
-    private List<int[]> _spriteIndices = [[0]];
+    private List<int[]> _frameSetIndices = [[0]];
 
     public string OverlayText => $"Particles: {_particles.Count:N0}";
 
@@ -130,7 +130,7 @@ public class ExampleGame : IGame
         int rowCount = 15;
         float paddingRight = (512 - 480) / 512f;
         float paddingBottom = (1024 - 900) / 1024f;
-        _spriteIndices = [
+        _frameSetIndices = [
             Enumerable.Range(0, 59).ToArray(),  // black arrow
             Enumerable.Range(59, 58).ToArray()  // blue arrow
         ];
@@ -184,7 +184,7 @@ public class ExampleGame : IGame
         Span<InstanceData> instanceData = stackalloc InstanceData[particleCount];
         for (int i = 0; i < particleCount; i++)
         {
-            var spriteIndex = _particles[i].SpriteIndex;
+            var spriteIndex = _particles[i].FrameIndex;
             instanceData[i] = new InstanceData(_particles[i].Position.XY(), _particles[i].Scale, spriteIndex);
         }
         // Update the instance VBO with the latest data
@@ -230,9 +230,9 @@ public class ExampleGame : IGame
             var v_y = (float)_random.NextDouble() * (VelocityMax - VelocityMin) + VelocityMin;
             var velocity = new Vector3(v_x, v_y, 0);
             var scale = (float)_random.NextDouble() * (ScaleMax - ScaleMin) + ScaleMin;
-            // Pick a random sprite based on the sprite indices
-            var spriteSet = _random.Next(_spriteIndices.Count);
-            _particles.Add(new Particle(position, velocity, scale, _spriteIndices[spriteSet]));
+            // Pick a random sprite based on the frame sets
+            var frameSet = _random.Next(_frameSetIndices.Count);
+            _particles.Add(new Particle(position, velocity, scale, _frameSetIndices[frameSet]));
         }
     }
 
