@@ -9,6 +9,8 @@ public class ExampleGame : IGame
     private const int SpawnParticleCount = 50;
     private const float ScaleMin = 0.01f;
     private const float ScaleMax = 0.1f;
+    private const float VelocityMin = -0.5f;
+    private const float VelocityMax = 0.5f;
     private readonly List<Particle> _particles = new(1_000);
     private readonly Random _random = new();
     private bool _mouseDown;
@@ -16,14 +18,9 @@ public class ExampleGame : IGame
     private JSObject? _shaderProgram;
     private JSObject? _instanceVBO;
     private JSObject? _positionBuffer;
+    private List<int[]> _spriteIndices = [[0]];
 
     public string OverlayText => $"Particles: {_particles.Count:N0}";
-
-    public ExampleGame()
-    {
-        // Spawn some particles at the center of the screen so the user sees something
-        SpawnParticles(Vector2.One / 2);
-    }
 
     public void Initialize(IShaderLoader shaderLoader)
     {
@@ -133,6 +130,10 @@ public class ExampleGame : IGame
         int rowCount = 15;
         float paddingRight = (512 - 480) / 512f;
         float paddingBottom = (1024 - 900) / 1024f;
+        _spriteIndices = [
+            Enumerable.Range(0, 59).ToArray(),  // black arrow
+            Enumerable.Range(59, 58).ToArray()  // blue arrow
+        ];
 
         if (_shaderProgram is null)
             throw new InvalidOperationException("Shader program not initialized");
@@ -151,6 +152,9 @@ public class ExampleGame : IGame
         GL.Uniform1f(uSpriteSheetRowCountLocation, rowCount);
         GL.Uniform1f(uPaddingRightLoc, paddingRight);
         GL.Uniform1f(uPaddingBottomLoc, paddingBottom);
+
+        // Spawn some particles at the center of the screen so the user sees something
+        SpawnParticles(Vector2.One / 2);
     }
 
     private static async Task<JSObject> LoadTexture(string url)
@@ -217,17 +221,18 @@ public class ExampleGame : IGame
     /// <inheritdoc/>
     public void FixedUpdate(TimeSpan deltaTime) { }
 
-    // private readonly int[] _spriteIndices = Enumerable.Range(0, 59).ToArray();
-    private readonly int[] _spriteIndices = Enumerable.Range(59, 58).ToArray();
-
     private void SpawnParticles(Vector2 center)
     {
         for (int i = 0; i < SpawnParticleCount; i++)
         {
             var position = ToWorldSpace(center);
-            var velocity = ToWorldSpace(new Vector2((float)_random.NextDouble(), (float)_random.NextDouble()));
+            var v_x = (float)_random.NextDouble() * (VelocityMax - VelocityMin) + VelocityMin;
+            var v_y = (float)_random.NextDouble() * (VelocityMax - VelocityMin) + VelocityMin;
+            var velocity = new Vector3(v_x, v_y, 0);
             var scale = (float)_random.NextDouble() * (ScaleMax - ScaleMin) + ScaleMin;
-            _particles.Add(new Particle(position, velocity, scale, _spriteIndices));
+            // Pick a random sprite based on the sprite indices
+            var spriteSet = _random.Next(_spriteIndices.Count);
+            _particles.Add(new Particle(position, velocity, scale, _spriteIndices[spriteSet]));
         }
     }
 
