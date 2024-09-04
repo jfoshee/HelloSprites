@@ -132,9 +132,13 @@ public class ExampleGame : IGame
         int rowCount = 15;
         float paddingRight = (512 - 480) / 512f;
         float paddingBottom = (1024 - 900) / 1024f;
+        var blackArrow = Enumerable.Range(0, 59);
+        var blueArrow = Enumerable.Range(59, 58);
         _frameSetIndices = [
-            Enumerable.Range(0, 59).ToArray(),  // black arrow
-            Enumerable.Range(59, 58).ToArray()  // blue arrow
+            blackArrow.ToArray(),
+            blackArrow.Reverse().ToArray(),
+            blueArrow.ToArray(),
+            blueArrow.Reverse().ToArray()
         ];
         _fpsMin = 24;
         _fpsMax = 120;
