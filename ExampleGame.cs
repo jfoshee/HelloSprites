@@ -75,8 +75,33 @@ public class ExampleGame : IGame
         GL.BindBuffer(GL.ARRAY_BUFFER, _instanceVBO);
 
         // Set up the instance attributes (for each member of InstanceData)
-        // Setting the divisor to 1 means this attribute is "per instance"
         var instanceDataSize = Marshal.SizeOf<InstanceData>();
+
+        // Set up TransformRow0 (a vec2 attribute)
+        var transformRow0Offset = Marshal.OffsetOf<InstanceData>(nameof(InstanceData.TransformRow0)).ToInt32();
+        var instanceTransformRow0Loc = GL.GetAttribLocation(_shaderProgram, "aInstanceTransformRow0");
+        GL.EnableVertexAttribArray(instanceTransformRow0Loc);
+        GL.VertexAttribDivisor(instanceTransformRow0Loc, 1);
+        GL.VertexAttribPointer(index: instanceTransformRow0Loc,
+                               size: Marshal.SizeOf<Vector2>() / sizeof(float), // 2
+                               type: GL.FLOAT,
+                               normalized: false,
+                               stride: instanceDataSize,
+                               offset: transformRow0Offset);
+
+        // Set up TransformRow1 (a vec2 attribute)
+        var transformRow1Offset = Marshal.OffsetOf<InstanceData>(nameof(InstanceData.TransformRow1)).ToInt32();
+        var instanceTransformRow1Loc = GL.GetAttribLocation(_shaderProgram, "aInstanceTransformRow1");
+        GL.EnableVertexAttribArray(instanceTransformRow1Loc);
+        GL.VertexAttribDivisor(instanceTransformRow1Loc, 1);
+        GL.VertexAttribPointer(index: instanceTransformRow1Loc,
+                               size: Marshal.SizeOf<Vector2>() / sizeof(float), // 2
+                               type: GL.FLOAT,
+                               normalized: false,
+                               stride: instanceDataSize,
+                               offset: transformRow1Offset);
+
+        // Set up Translation (a vec2 attribute)
         var translationOffset = Marshal.OffsetOf<InstanceData>(nameof(InstanceData.Translation)).ToInt32();
         var instancePosLoc = GL.GetAttribLocation(_shaderProgram, "aInstanceTranslation");
         GL.EnableVertexAttribArray(instancePosLoc);
@@ -88,17 +113,7 @@ public class ExampleGame : IGame
                                stride: instanceDataSize,
                                offset: translationOffset);
 
-        var scaleOffset = Marshal.OffsetOf<InstanceData>(nameof(InstanceData.Scale)).ToInt32();
-        var instanceScaleLoc = GL.GetAttribLocation(_shaderProgram, "aInstanceScale");
-        GL.EnableVertexAttribArray(instanceScaleLoc);
-        GL.VertexAttribDivisor(instanceScaleLoc, 1);
-        GL.VertexAttribPointer(index: instanceScaleLoc,
-                               size: 1,
-                               type: GL.FLOAT,
-                               normalized: false,
-                               stride: instanceDataSize,
-                               offset: scaleOffset);
-
+        // Set up SpriteIndex (a float attribute)
         var spriteIndexOffset = Marshal.OffsetOf<InstanceData>(nameof(InstanceData.SpriteIndex)).ToInt32();
         var instanceSpriteIndexLoc = GL.GetAttribLocation(_shaderProgram, "aInstanceSpriteIndex");
         GL.EnableVertexAttribArray(instanceSpriteIndexLoc);
@@ -193,7 +208,9 @@ public class ExampleGame : IGame
         for (int i = 0; i < particleCount; i++)
         {
             var spriteIndex = _particles[i].FrameIndex;
-            instanceData[i] = new InstanceData(_particles[i].Position.XY(), _particles[i].Scale, spriteIndex);
+            var transform = Matrix3x2.CreateScale(_particles[i].Scale) *
+                            Matrix3x2.CreateTranslation(_particles[i].Position.XY());
+            instanceData[i] = new InstanceData(transform, spriteIndex);
         }
         // Update the instance VBO with the latest data
         GL.BindBuffer(GL.ARRAY_BUFFER, _instanceVBO);
@@ -237,7 +254,9 @@ public class ExampleGame : IGame
             var v_x = (float)_random.NextDouble() * (VelocityMax - VelocityMin) + VelocityMin;
             var v_y = (float)_random.NextDouble() * (VelocityMax - VelocityMin) + VelocityMin;
             var velocity = new Vector3(v_x, v_y, 0);
-            var scale = (float)_random.NextDouble() * (ScaleMax - ScaleMin) + ScaleMin;
+            var scale_x = (float)_random.NextDouble() * (ScaleMax - ScaleMin) + ScaleMin;
+            var scale_y = (float)_random.NextDouble() * (ScaleMax - ScaleMin) + ScaleMin;
+            var scale = new Vector2(scale_x, scale_y);
             // Pick a random sprite based on the frame sets
             var frameSet = _random.Next(_frameSetIndices.Count);
             int[] frameIndices = _frameSetIndices[frameSet];
