@@ -252,15 +252,17 @@ public class ExampleGame : IGame
         for (int i = 0; i < SpawnParticleCount; i++)
         {
             var position = ToWorldSpace(center);
+            // Random velocity
             var v_x = (float)_random.NextDouble() * (VelocityMax - VelocityMin) + VelocityMin;
             var v_y = (float)_random.NextDouble() * (VelocityMax - VelocityMin) + VelocityMin;
             var velocity = new Vector3(v_x, v_y, 0);
-            // Random transform
+            // Random scale
             var scale_x = (float)_random.NextDouble() * (ScaleMax - ScaleMin) + ScaleMin;
             var scale_y = (float)_random.NextDouble() * (ScaleMax - ScaleMin) + ScaleMin;
             var scale = new Vector2(scale_x, scale_y);
-            var rotation = (float)_random.NextDouble() * MathF.PI * 2;
-            // Pick a random sprite based on the frame sets
+            // Rotate in direction of velocity
+            var rotation = MathF.PI / 2 - MathF.Atan2(velocity.Y, velocity.X);
+            // Random sprite based on the frame sets
             var frameSet = _random.Next(_frameSetIndices.Count);
             int[] frameIndices = _frameSetIndices[frameSet];
             var initialFrame = _random.Next(frameIndices.Length);
