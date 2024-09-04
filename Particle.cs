@@ -11,7 +11,7 @@ public sealed class Particle(Vector3 position, Vector3 velocity, float scale, in
     public float Scale { get; set; } = scale;
     public TimeSpan Lifetime { get; private set; } = TimeSpan.FromSeconds(LifeSpanSeconds);
     public bool Dead { get; private set; } = false;
-    public int SpriteIndex { get; private set; }
+    public int SpriteIndex { get; private set; } = spriteIndices[0];
     private readonly int[] _spriteIndices = spriteIndices;
 
     public void Update(TimeSpan deltaTime)

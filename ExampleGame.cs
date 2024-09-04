@@ -217,7 +217,8 @@ public class ExampleGame : IGame
     /// <inheritdoc/>
     public void FixedUpdate(TimeSpan deltaTime) { }
 
-    private readonly int[] _spriteIndices = Enumerable.Range(0, 58).ToArray();
+    // private readonly int[] _spriteIndices = Enumerable.Range(0, 59).ToArray();
+    private readonly int[] _spriteIndices = Enumerable.Range(59, 58).ToArray();
 
     private void SpawnParticles(Vector2 center)
     {
