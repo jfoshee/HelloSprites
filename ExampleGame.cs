@@ -217,6 +217,8 @@ public class ExampleGame : IGame
     /// <inheritdoc/>
     public void FixedUpdate(TimeSpan deltaTime) { }
 
+    private readonly int[] _spriteIndices = Enumerable.Range(0, 58).ToArray();
+
     private void SpawnParticles(Vector2 center)
     {
         for (int i = 0; i < SpawnParticleCount; i++)
@@ -224,7 +226,7 @@ public class ExampleGame : IGame
             var position = ToWorldSpace(center);
             var velocity = ToWorldSpace(new Vector2((float)_random.NextDouble(), (float)_random.NextDouble()));
             var scale = (float)_random.NextDouble() * (ScaleMax - ScaleMin) + ScaleMin;
-            _particles.Add(new Particle(position, velocity, scale));
+            _particles.Add(new Particle(position, velocity, scale, _spriteIndices));
         }
     }
 

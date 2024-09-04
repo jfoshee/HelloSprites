@@ -1,32 +1,18 @@
 namespace HelloSprites;
 
-public sealed class Particle
+public sealed class Particle(Vector3 position, Vector3 velocity, float scale, int[] spriteIndices)
 {
+    private static readonly TimeSpan FrameDuration = TimeSpan.FromSeconds(1.0 / 60.0);
     private const double LifeSpanSeconds = 5;
     // private const double LifeSpanSeconds = 2 - 1/20.0;
 
-    public Vector3 Position { get; set; }
-    public Vector3 Velocity { get; set; }
-    public float Scale { get; set; }
+    public Vector3 Position { get; set; } = position;
+    public Vector3 Velocity { get; set; } = velocity;
+    public float Scale { get; set; } = scale;
     public TimeSpan Lifetime { get; private set; } = TimeSpan.FromSeconds(LifeSpanSeconds);
     public bool Dead { get; private set; } = false;
     public int SpriteIndex { get; private set; }
-    private int _spriteRow;
-
-    const int RowCount = 11;
-    const int ColumnCount = 20;
-
-    private static readonly int[] SpriteIndices = Enumerable.Range(0, ColumnCount - 1).ToArray();
-    private static readonly TimeSpan FrameDuration = TimeSpan.FromSeconds(1.0 / 24.0);
-
-    public Particle(Vector3 position, Vector3 velocity, float scale)
-    {
-        Position = position;
-        Velocity = velocity;
-        Scale = scale;
-        // Pick random row when constructed
-        _spriteRow = new Random().Next(0, RowCount - 1);
-    }
+    private readonly int[] _spriteIndices = spriteIndices;
 
     public void Update(TimeSpan deltaTime)
     {
@@ -42,8 +28,7 @@ public sealed class Particle
         // Update the particle's sprite index based on time
         var elapsedSeconds = LifeSpanSeconds - Lifetime.TotalSeconds;
         int totalFramesElapsed = (int)(elapsedSeconds / FrameDuration.TotalSeconds);
-        var rowOffset = _spriteRow * ColumnCount;
-        SpriteIndex = SpriteIndices[totalFramesElapsed % SpriteIndices.Length] + rowOffset;
+        SpriteIndex = _spriteIndices[totalFramesElapsed % _spriteIndices.Length];
 
         // Check if the particle's lifetime has expired
         if (Lifetime <= TimeSpan.Zero)
