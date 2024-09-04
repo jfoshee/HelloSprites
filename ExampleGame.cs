@@ -120,12 +120,19 @@ public class ExampleGame : IGame
 
     public async Task LoadAssetsAsync()
     {
+        if (_shaderProgram is null)
+            throw new InvalidOperationException("Shader program not initialized");
         // Load and bind texture
         var textureId = await LoadTexture("/SpriteSheets/magic-fx.png");
         GL.ActiveTexture(GL.TEXTURE0);
         GL.BindTexture(GL.TEXTURE_2D, textureId);
-        var textureUniformLoc = GL.GetUniformLocation(_shaderProgram!, "uTexture");
+        var textureUniformLoc = GL.GetUniformLocation(_shaderProgram, "uTexture");
         GL.Uniform1i(textureUniformLoc, 0);
+        // Setup Sprite Sheet parameters as shader Uniforms
+        var uSpriteSheetColumnCountLocation = GL.GetUniformLocation(_shaderProgram, "uSpriteSheetColumnCount");
+        var uSpriteSheetRowCountLocation = GL.GetUniformLocation(_shaderProgram, "uSpriteSheetRowCount");
+        GL.Uniform1f(uSpriteSheetColumnCountLocation, 20.0f);
+        GL.Uniform1f(uSpriteSheetRowCountLocation, 11.0f);
     }
 
     private static async Task<JSObject> LoadTexture(string url)
