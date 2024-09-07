@@ -5,14 +5,22 @@ public interface IGame : IRenderer
     string? OverlayText { get; }
 
     /// <summary>
-    /// Creates initial resources for the game scene.
+    /// Loads essential assets such as textures and sounds asynchronously.
+    /// Called before InitializeScene.
+    /// Use for loading smaller lower-fidelity assets for first render.
     /// </summary>
-    void Initialize(IShaderLoader shaderLoader);
+    Task LoadAssetsEssentialAsync(IShaderLoader shaderLoader);
 
     /// <summary>
-    /// Loads assets such as textures and sounds asynchronously.
+    /// Creates initial resources for the game scene.
     /// </summary>
-    Task LoadAssetsAsync();
+    void InitializeScene(IShaderLoader shaderLoader);
+
+    /// <summary>
+    /// Called after first Update and Render.
+    /// Use for loading larger higher-fidelity assets.
+    /// </summary>
+    Task LoadAssetsExtendedAsync();
 
     /// <summary>
     /// Handles keyboard events such as key presses and releases.

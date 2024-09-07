@@ -24,10 +24,60 @@ public class ExampleGame : IGame
 
     public string OverlayText => $"Particles: {_particles.Count:N0}";
 
-    public void Initialize(IShaderLoader shaderLoader)
+    /// <inheritdoc/>
+    public async Task LoadAssetsEssentialAsync(IShaderLoader shaderLoader)
     {
         // Load the shader program
         _shaderProgram = shaderLoader.LoadShaderProgram("sprite-sheet-vertex", "fragment");
+
+        // string texturePath = "/SpriteSheets/magic-fx.png";
+        // // Sprite Sheet parameters
+        // int columnCount = 20;
+        // int rowCount = 11;
+        // float paddingRight = 0f;
+        // float paddingBottom = 0f;
+
+        // Load the low-res texture
+        string texturePath = "/SpriteSheets/arrows-lores.png";
+        // Sprite Sheet parameters (see SpriteSheets/arrows.json)
+        int columnCount = 8;
+        int rowCount = 15;
+        float paddingRight = (512 - 480) / 512f;
+        float paddingBottom = (1024 - 900) / 1024f;
+        var blackArrow = Enumerable.Range(0, 59);
+        var blueArrow = Enumerable.Range(59, 58);
+        _frameSetIndices = [
+            blackArrow.ToArray(),
+            blackArrow.Reverse().ToArray(),
+            blueArrow.ToArray(),
+            blueArrow.Reverse().ToArray()
+        ];
+        _fpsMin = 24;
+        _fpsMax = 120;
+
+        // Load and bind texture
+        var textureId = await LoadTexture(texturePath);
+        GL.ActiveTexture(GL.TEXTURE0);
+        GL.BindTexture(GL.TEXTURE_2D, textureId);
+        var textureUniformLoc = GL.GetUniformLocation(_shaderProgram, "uTexture");
+        GL.Uniform1i(textureUniformLoc, 0);
+
+        // Setup Sprite Sheet parameters as shader Uniforms
+        var uSpriteSheetColumnCountLocation = GL.GetUniformLocation(_shaderProgram, "uSpriteSheetColumnCount");
+        var uSpriteSheetRowCountLocation = GL.GetUniformLocation(_shaderProgram, "uSpriteSheetRowCount");
+        var uPaddingRightLoc = GL.GetUniformLocation(_shaderProgram, "uPaddingRight");
+        var uPaddingBottomLoc = GL.GetUniformLocation(_shaderProgram, "uPaddingBottom");
+        GL.Uniform1f(uSpriteSheetColumnCountLocation, columnCount);
+        GL.Uniform1f(uSpriteSheetRowCountLocation, rowCount);
+        GL.Uniform1f(uPaddingRightLoc, paddingRight);
+        GL.Uniform1f(uPaddingBottomLoc, paddingBottom);
+    }
+
+    /// <inheritdoc/>
+    public void InitializeScene(IShaderLoader shaderLoader)
+    {
+        if (_shaderProgram is null)
+            throw new InvalidOperationException("Shader program not initialized");
 
         // Define quad vertices with positions and texture coordinates
         Span<float> vertices =
@@ -130,54 +180,19 @@ public class ExampleGame : IGame
         GL.BlendFunc(GL.SRC_ALPHA, GL.ONE_MINUS_SRC_ALPHA);
 
         GL.ClearColor(0.1f, 0.1f, 0.1f, 1.0f);
-    }
-
-    public async Task LoadAssetsAsync()
-    {
-        // string texturePath = "/SpriteSheets/magic-fx.png";
-        // // Sprite Sheet parameters
-        // int columnCount = 20;
-        // int rowCount = 11;
-        // float paddingRight = 0f;
-        // float paddingBottom = 0f;
-
-        string texturePath = "/SpriteSheets/arrows.png";
-        // Sprite Sheet parameters (see SpriteSheets/arrows.json)
-        int columnCount = 8;
-        int rowCount = 15;
-        float paddingRight = (512 - 480) / 512f;
-        float paddingBottom = (1024 - 900) / 1024f;
-        var blackArrow = Enumerable.Range(0, 59);
-        var blueArrow = Enumerable.Range(59, 58);
-        _frameSetIndices = [
-            blackArrow.ToArray(),
-            blackArrow.Reverse().ToArray(),
-            blueArrow.ToArray(),
-            blueArrow.Reverse().ToArray()
-        ];
-        _fpsMin = 24;
-        _fpsMax = 120;
-
-        if (_shaderProgram is null)
-            throw new InvalidOperationException("Shader program not initialized");
-        // Load and bind texture
-        var textureId = await LoadTexture(texturePath);
-        GL.ActiveTexture(GL.TEXTURE0);
-        GL.BindTexture(GL.TEXTURE_2D, textureId);
-        var textureUniformLoc = GL.GetUniformLocation(_shaderProgram, "uTexture");
-        GL.Uniform1i(textureUniformLoc, 0);
-        // Setup Sprite Sheet parameters as shader Uniforms
-        var uSpriteSheetColumnCountLocation = GL.GetUniformLocation(_shaderProgram, "uSpriteSheetColumnCount");
-        var uSpriteSheetRowCountLocation = GL.GetUniformLocation(_shaderProgram, "uSpriteSheetRowCount");
-        var uPaddingRightLoc = GL.GetUniformLocation(_shaderProgram, "uPaddingRight");
-        var uPaddingBottomLoc = GL.GetUniformLocation(_shaderProgram, "uPaddingBottom");
-        GL.Uniform1f(uSpriteSheetColumnCountLocation, columnCount);
-        GL.Uniform1f(uSpriteSheetRowCountLocation, rowCount);
-        GL.Uniform1f(uPaddingRightLoc, paddingRight);
-        GL.Uniform1f(uPaddingBottomLoc, paddingBottom);
 
         // Spawn some particles at the center of the screen so the user sees something
         SpawnParticles(Vector2.One / 2);
+    }
+
+    /// <inheritdoc/>
+    public async Task LoadAssetsExtendedAsync()
+    {
+        // Load the high-res texture
+        string texturePath = "/SpriteSheets/arrows.png";
+        var textureId = await LoadTexture(texturePath);
+        GL.ActiveTexture(GL.TEXTURE0);
+        GL.BindTexture(GL.TEXTURE_2D, textureId);
     }
 
     private static async Task<JSObject> LoadTexture(string url)
