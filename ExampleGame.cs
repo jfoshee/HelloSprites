@@ -30,7 +30,7 @@ public class ExampleGame : IGame
         // Load the shader program
         _shaderProgram = shaderLoader.LoadShaderProgram("sprite-sheet-vertex", "fragment");
 
-        // string texturePath = "/SpriteSheets/magic-fx.png";
+        // string texturePath = "./SpriteSheets/magic-fx.png";
         // // Sprite Sheet parameters
         // int columnCount = 20;
         // int rowCount = 11;
@@ -38,7 +38,7 @@ public class ExampleGame : IGame
         // float paddingBottom = 0f;
 
         // Load the low-res texture
-        string texturePath = "/SpriteSheets/arrows-lores.png";
+        string texturePath = "./SpriteSheets/arrows-lores.png";
         // Sprite Sheet parameters (see SpriteSheets/arrows.json)
         int columnCount = 8;
         int rowCount = 15;
@@ -189,7 +189,7 @@ public class ExampleGame : IGame
     public async Task LoadAssetsExtendedAsync()
     {
         // Load the high-res texture
-        string texturePath = "/SpriteSheets/arrows.png";
+        string texturePath = "./SpriteSheets/arrows.png";
         var textureId = await LoadTexture(texturePath);
         GL.ActiveTexture(GL.TEXTURE0);
         GL.BindTexture(GL.TEXTURE_2D, textureId);
